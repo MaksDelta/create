@@ -21,9 +21,25 @@ if [ ${#FILES[@]} -eq 0 ]; then
   echo "У папці $SRC немає зображень."; exit 1
 fi
 
+# Зберігаємо попередній photos.js, щоб перенести описи (desc) у новий файл.
+PREV=""
+if [ -f "$OUT" ]; then
+  PREV="$TMP/prev.js"
+  cp "$OUT" "$PREV"
+fi
+
+# Опис фото з попередньої збірки (шукаємо за іменем файлу). Порожньо, якщо не знайдено.
+prev_desc() {
+  [ -n "$PREV" ] || return 0
+  grep -m1 -F "file: \"$1\"," "$PREV" \
+    | sed -n 's/.*[,{] desc: "\(.*\)",[[:space:]]*$/\1/p'
+}
+
 {
-  echo "/* ЗГЕНЕРОВАНО tools/build-photos.sh — не редагуйте вручну."
-  echo "   Щоб змінити набір фото: покладіть файли в photos/ і запустіть скрипт. */"
+  echo "/* ЗГЕНЕРОВАНО tools/build-photos.sh — картинки не редагуйте вручну."
+  echo "   Щоб змінити набір фото: покладіть файли в photos/ і запустіть скрипт."
+  echo "   Поле desc (опис фото) можна правити вручну — скрипт переносить його"
+  echo "   у нову збірку за іменем файлу. */"
   echo "var PHOTOS = ["
 } > "$OUT"
 
@@ -41,9 +57,10 @@ for f in "${FILES[@]}"; do
 
   W=$(sips -g pixelWidth  "$TMP/full.jpg" | tail -1 | awk '{print $2}')
   H=$(sips -g pixelHeight "$TMP/full.jpg" | tail -1 | awk '{print $2}')
+  DESC="$(prev_desc "$base")"
 
   {
-    printf '  { id: "p%d", name: "%s", file: "%s", w: %s, h: %s,\n' "$i" "$name" "$base" "$W" "$H"
+    printf '  { id: "p%d", name: "%s", file: "%s", w: %s, h: %s, desc: "%s",\n' "$i" "$name" "$base" "$W" "$H" "$DESC"
     printf '    thumb: "data:image/jpeg;base64,'
     base64 < "$TMP/thumb.jpg" | tr -d '\n'
     printf '",\n'

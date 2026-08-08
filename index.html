@@ -205,6 +205,7 @@
       <h2>1. Фото</h2>
       <div class="pad">
         <div class="gal" id="gal"></div>
+        <div class="row"><span class="hint" id="pdesc"></span></div>
         <div class="row" style="margin-top:10px">
           <label class="btn sm" style="flex:1;text-align:center">
             + Своє фото<input type="file" id="up" accept="image/*" multiple hidden>
@@ -266,6 +267,7 @@
     <div class="stagebar">
       <button class="sm ghost" id="prev"><span class="full">← попередній текст</span><span class="short">←</span></button>
       <span id="counter">—</span>
+      <button class="sm primary" id="roll" title="Підібрати вигляд тексту під це фото"><span class="full">🎲 Інший вигляд</span><span class="short">🎲</span></button>
       <button class="sm ghost" id="next"><span class="full">наступний текст →</span><span class="short">→</span></button>
     </div>
   </div>
@@ -281,18 +283,30 @@
   <!-- ПРАВА ПАНЕЛЬ -->
   <aside class="right">
     <section data-tab="text">
-      <h2>5. Готові тексти</h2>
+      <h2>5. Свій текст — авто</h2>
+      <div class="pad">
+        <textarea id="autotext" placeholder="Перший рядок — заголовок.&#10;Далі — підпис."></textarea>
+        <div class="row" style="margin-top:9px">
+          <button class="primary" id="autogo" style="flex:1">✨ Підібрати вигляд</button>
+        </div>
+        <div class="row"><span class="hint">Підбере стиль, колір і розташування під вибране фото. Фото лишається ваше — міняється тільки текст.</span></div>
+      </div>
+    </section>
+
+    <section data-tab="text">
+      <h2>6. Готові тексти</h2>
       <div class="pad">
         <div class="row" style="margin-bottom:9px">
           <button class="sm on" id="emo">😊 з емодзі</button>
           <button class="sm" id="addown">+ свій текст</button>
         </div>
         <div class="tlist" id="tlist"></div>
+        <div class="row" id="tmatch" style="flex-wrap:wrap; row-gap:6px"></div>
       </div>
     </section>
 
     <section data-tab="style">
-      <h2>6. Стиль тексту</h2>
+      <h2>7. Стиль тексту</h2>
       <div class="pad">
         <div class="chips" id="styles"></div>
         <div class="row"><span class="hint">Стиль міняє шрифт, колір, затемнення й розташування одразу.</span></div>
@@ -300,7 +314,7 @@
     </section>
 
     <section data-tab="style">
-      <h2>7. Розкладка</h2>
+      <h2>8. Розкладка</h2>
       <div class="pad">
         <div class="chips">
           <button class="sm" data-lay="top">Вгорі</button>
@@ -311,7 +325,7 @@
     </section>
 
     <section data-tab="style">
-      <h2>8. Шари тексту</h2>
+      <h2>9. Шари тексту</h2>
       <div class="pad">
         <div class="layers" id="layers"></div>
         <div id="noLayers" class="hint" style="padding:4px 0">Оберіть текст зі списку вище.</div>
@@ -549,6 +563,7 @@ var state = {
   emoji: true,
   textIdx: -1,
   styleId: 'classic',
+  pos: 'bottom',
 };
 
 var images = {};              // id -> HTMLImageElement
@@ -828,7 +843,8 @@ function applyStyle(id){
   for (var i = 0; i < state.layers.length; i++)
     applyProps(state.layers[i], i === 0 ? S.title : (S.body || S.title));
 
-  layout(S.pos || 'bottom');
+  state.pos = S.pos || 'bottom';
+  layout(state.pos);
   buildStyles();
   syncEditor();
 }
@@ -844,17 +860,345 @@ function buildStyles(){
   });
 }
 
+function setText(title, body){
+  state.layers = [];
+  makeLayer(title, {});
+  if (body) makeLayer(body, {});
+  state.sel = state.layers.length ? state.layers[0].id : null;
+  applyStyle(state.styleId);
+}
+
 function addPreset(idx){
   var t = texts[idx];
   if (!t) return;
-  state.layers = [];
   state.textIdx = idx;
-  var title = (state.emoji && t.emoji ? t.emoji + ' ' : '') + t.title;
-  makeLayer(title, {});
-  if (t.body) makeLayer(t.body, {});
-  state.sel = state.layers[0].id;
-  applyStyle(state.styleId);
+  setText((state.emoji && t.emoji ? t.emoji + ' ' : '') + t.title, t.body);
   syncLayers(); syncEditor(); syncTexts(); render();
+}
+
+/* ═══════════ автопідбір: фото + стиль + колір ═══════════ */
+
+/* Резервна палітра акцентів — тільки гама салону: тепле золото, пісочна,
+   кремова, біла. Холодних відтінків тут немає навмисне. */
+var ACCENTS = ['#e8b04b','#f2c974','#deb673','#c9945a','#ede6da','#ffffff'];
+
+function lumHex(hex){
+  var h = String(hex).replace('#','');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n = parseInt(h,16);
+  return (0.2126*((n>>16)&255) + 0.7152*((n>>8)&255) + 0.0722*(n&255)) / 255;
+}
+
+function hsl2hex(h, s, l){
+  var a = s * Math.min(l, 1-l);
+  function f(n){
+    var k = (n + h/30) % 12;
+    var v = l - a * Math.max(-1, Math.min(Math.min(k-3, 9-k), 1));
+    return Math.round(255 * v).toString(16).padStart(2, '0');
+  }
+  return '#' + f(0) + f(8) + f(4);
+}
+
+/* ——— аналіз кадру ———
+   Дивимось не на все фото, а саме на те, що видно при поточному кадруванні:
+   яскравість по клітинках + які кольори реально є в кадрі. */
+
+var frameCache = {key:null, data:null};
+var thumbImgs = {};   // id -> мініатюра з галереї (запасна для аналізу)
+
+function sampleFrame(){
+  // Повнорозмірне фото могло ще не завантажитись (перші мілісекунди після
+  // вибору) — тоді беремо мініатюру з галереї, вона вже готова.
+  var img = currentImage();
+  if (!img || !img.complete || !img.naturalWidth) img = thumbImgs[state.photoId];
+  if (!img || !img.complete || !img.naturalWidth) return null;
+
+  var ar = state.ratio.w / state.ratio.h;
+  var w = 48, h = Math.max(8, Math.round(48 / ar));
+  var key = state.photoId + '|' + state.ratio.id + '|' + state.img.scale.toFixed(2)
+          + '|' + state.img.ox.toFixed(3) + '|' + state.img.oy.toFixed(3);
+  if (frameCache.key === key) return frameCache.data;
+
+  var c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  var cc = c.getContext('2d');
+
+  // те саме перетворення, що й у paint() — щоб бачити саме видиму частину
+  var base = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  var s = base * state.img.scale;
+  var dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+  cc.drawImage(img, (w - dw)/2 + state.img.ox * w, (h - dh)/2 + state.img.oy * h, dw, dh);
+
+  var d;
+  try { d = cc.getImageData(0, 0, w, h).data; } catch (e){ return null; }
+
+  var lum = new Float32Array(w * h);
+  var hues = new Float32Array(24);   // гістограма відтінків, зважена насиченістю
+
+  for (var p = 0, i = 0; p < w*h; p++, i += 4){
+    var r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
+    lum[p] = 0.2126*r + 0.7152*g + 0.0722*b;
+
+    var mx = Math.max(r,g,b), mn = Math.min(r,g,b), dl = mx - mn;
+    var L = (mx + mn) / 2;
+    if (dl > 0.08 && L > 0.12 && L < 0.92){
+      var sat = dl / (1 - Math.abs(2*L - 1));
+      var hue;
+      if (mx === r)      hue = 60 * (((g - b) / dl) % 6);
+      else if (mx === g) hue = 60 * ((b - r) / dl + 2);
+      else               hue = 60 * ((r - g) / dl + 4);
+      if (hue < 0) hue += 360;
+      hues[Math.floor(hue / 15) % 24] += sat * sat;   // насичені пікселі важать більше
+    }
+  }
+
+  // основний відтінок кадру + другий, якщо він справді помітний
+  // (у цих фото основний — тепла бежева, а другий ловить рожеву картину чи блакить вікна)
+  var order = [];
+  for (var k = 0; k < 24; k++) order.push({h: k*15 + 7.5, w: hues[k]});
+  order.sort(function(a, b){ return b.w - a.w; });
+
+  var h1 = order[0].w > 0 ? order[0].h : null, h2 = null;
+  if (h1 !== null){
+    for (var j = 1; j < order.length; j++){
+      var dist = Math.abs(order[j].h - h1);
+      if (dist > 180) dist = 360 - dist;
+      if (dist >= 45){
+        if (order[j].w >= order[0].w * 0.12) h2 = order[j].h;
+        break;
+      }
+    }
+  }
+
+  frameCache.key = key;
+  frameCache.data = {w:w, h:h, lum:lum, hue1:h1, hue2:h2};
+  return frameCache.data;
+}
+
+/* Яскравість і рівність фону в довільному прямокутнику (координати 0..1) */
+function regionStats(f, r){
+  var x0 = Math.max(0, Math.floor(r.x0 * f.w)), x1 = Math.min(f.w, Math.ceil(r.x1 * f.w));
+  var y0 = Math.max(0, Math.floor(r.y0 * f.h)), y1 = Math.min(f.h, Math.ceil(r.y1 * f.h));
+  if (x1 <= x0) x1 = x0 + 1;
+  if (y1 <= y0) y1 = y0 + 1;
+
+  var sum = 0, sum2 = 0, n = 0;
+  for (var y = y0; y < y1; y++){
+    for (var x = x0; x < x1; x++){
+      var L = f.lum[y*f.w + x];
+      sum += L; sum2 += L*L; n++;
+    }
+  }
+  var mean = n ? sum/n : 0.5;
+  return {lum:mean, std:Math.sqrt(Math.max(0, sum2/n - mean*mean))};
+}
+
+/* Колір, узятий із кадру. Три джерела, щоб не було одноманітно:
+   основний відтінок фото, другий помітний відтінок, і доповняльний
+   (протилежний основному — класична пара «тепле + холодне»). */
+function frameAccent(f, light){
+  if (!f || f.hue1 === null) return null;
+
+  // Беремо основний колір інтер'єру, інколи — другий колір кадру.
+  // Холодні відтінки (небо у вікні, синє скло) пропускаємо: салон теплий,
+  // і блакитний акцент випадав би з його гами.
+  var hue = f.hue1;
+  if (f.hue2 !== null && !isCold(f.hue2) && Math.random() < 0.35) hue = f.hue2;
+
+  return light ? hsl2hex(hue, 0.62, 0.66) : hsl2hex(hue, 0.70, 0.56);
+}
+
+/* 160°–280° — блакитне / синє / бузкове */
+function isCold(h){ return h >= 160 && h <= 280; }
+
+/* Де саме опиниться текст при цьому стилі й розташуванні (координати 0..1).
+   Повторює математику layout(), але нічого не змінює. */
+function predictRect(S, pos){
+  if (!state.layers.length) return null;
+  var W = 1000, H = Math.round(1000 * state.ratio.h / state.ratio.w);
+  var mc = document.createElement('canvas').getContext('2d');
+
+  var hs = [], maxW = 0, total = 0, gap = H * 0.022;
+  for (var i = 0; i < state.layers.length; i++){
+    var p = (i === 0 ? S.title : (S.body || S.title));
+    var m = measure(mc, {
+      text: state.layers[i].text, font:p.font, weight:p.weight, size:p.size,
+      tracking:p.tracking, lineHeight:p.lineHeight, upper:!!p.upper, maxWidth:p.maxWidth,
+    }, W, H);
+    hs.push(m.h); total += m.h;
+    if (m.w > maxW) maxW = m.w;
+  }
+  total += gap * (state.layers.length - 1);
+
+  var y0 = pos === 'top' ? H*0.09 : (pos === 'center' ? (H - total)/2 : H*(1 - 0.085) - total);
+  var align = S.title.align || 'center';
+  var x0 = align === 'left' ? W*0.08 : (align === 'right' ? W*0.92 - maxW : W*0.5 - maxW/2);
+
+  var padX = W * 0.02, padY = H * 0.015;
+  return {
+    x0: (x0 - padX)/W, x1: (x0 + maxW + padX)/W,
+    y0: (y0 - padY)/H, y1: (y0 + total + padY)/H,
+  };
+}
+
+/* Затемнення стилю, підлаштоване під обране розташування тексту:
+   якщо текст переїхав угору, градієнт має переїхати разом з ним. */
+function variantScrim(S, pos){
+  var t = S.scrim.type;
+  if (t === 'bottom' || t === 'top')
+    t = pos === 'top' ? 'top' : (pos === 'bottom' ? 'bottom' : 'full');
+  return {type:t, strength:S.scrim.strength, color:S.scrim.color || '#000000'};
+}
+
+/* Наскільки затемнення накриває точку на висоті y (0..1) —
+   за тією ж формулою, за якою його малює drawScrim() */
+function scrimAt(sc, y){
+  var t = sc.type, s = sc.strength;
+  if (t === 'none' || !s) return 0;
+  if (t === 'full') return s;
+  var bot = y <= 0.30 ? 0 : s * ((y - 0.30) / 0.70);
+  var top = y >= 0.60 ? 0 : s * (1 - y / 0.60);
+  if (t === 'bottom') return bot;
+  if (t === 'top')    return top;
+  if (t === 'both')   return Math.max(bot, top);
+  return 0;
+}
+
+function scoreCombo(f, S, pos, tLen, bLen){
+  var tp = S.title;
+  var sc = variantScrim(S, pos);
+
+  var rect = predictRect(S, pos);
+  if (!rect) return 0;
+
+  // міряємо фон саме там, де опиниться текст — не всю смугу
+  var b = regionStats(f, rect);
+  var yMid = (rect.y0 + rect.y1) / 2;
+
+  var cover, bgL;
+  if (tp.box){
+    cover = tp.boxOpacity;
+    bgL = b.lum * (1 - cover) + lumHex(tp.boxColor) * cover;
+  } else {
+    cover = scrimAt(sc, yMid);
+    bgL = b.lum * (1 - cover) + lumHex(sc.color) * cover;
+  }
+
+  var score = Math.abs(lumHex(tp.color) - bgL) * 120;          // контраст — головне
+  score += (1 - Math.min(1, b.std / 0.22)) * 34 * (1 - cover); // рівний фон
+  if (tp.stroke > 0) score += 22;                              // обведення рятує
+
+  // текст не має вилазити за край кадру
+  if (rect.y0 < 0.01 || rect.y1 > 0.99) score -= 45;
+
+  // довгий заголовок не тулимо у стиль з величезним шрифтом.
+  // tLen*size ≈ 1.6 × кількість рядків, тож до ~2 рядків штрафу немає,
+  // а далі — тим більший, чим більше рядків набігає.
+  var x = tLen * tp.size;
+  var fit = x <= 3.0 ? 1 : 1 - (x - 3.0) / 1.5;
+  score += Math.max(-1.2, fit) * 26;
+  if (bLen > 90 && S.body && S.body.size > 0.036) score -= 12;
+
+  return score + Math.random() * 18;
+}
+
+/* Акцент: здебільшого беремо колір із самого фото, інколи — з палітри */
+function pickAccent(light, f){
+  if (f && Math.random() < 0.82){
+    var fromPhoto = frameAccent(f, light);
+    if (fromPhoto) return fromPhoto;
+  }
+  var pool = ACCENTS.filter(function(c){
+    return light ? lumHex(c) > 0.45 : true;
+  });
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/* Акцентний колір — там, де він доречний */
+function maybeAccent(S, f){
+  var L0 = state.layers[0];
+  if (!L0) return;
+  if (S.id === 'highlight'){
+    var a = pickAccent(false, f);
+    L0.boxColor = a;
+    L0.color = lumHex(a) > 0.55 ? '#1a1408' : '#ffffff';
+  } else if (!L0.box && !L0.stroke && lumHex(L0.color) > 0.5
+             && (S.id === 'gold' || Math.random() < 0.4)){
+    L0.color = pickAccent(true, f);
+  }
+}
+
+/* Ставимо стиль, але з іншим розташуванням, ніж у нього за замовчуванням */
+function applyVariant(S, pos){
+  applyStyle(S.id);
+  var sc = variantScrim(S, pos);
+  state.scrim.type = sc.type;
+  state.pos = pos;
+  buildScrims();
+  layout(pos);
+}
+
+/* Підбирає вигляд тексту під ПОТОЧНЕ фото. Фото не змінюється і не зсувається. */
+function autopick(){
+  if (!state.layers.length) return;
+
+  var f = sampleFrame();
+  var tLen = state.layers[0].text.replace(/\s+/g,' ').length;
+  var bLen = state.layers.length > 1 ? state.layers[1].text.length : 0;
+
+  var POSITIONS = ['top','center','bottom'];
+  var combos = [];
+
+  STYLES.forEach(function(S){
+    POSITIONS.forEach(function(pos){
+      // поточний варіант пропускаємо, щоб кнопка завжди щось міняла
+      if (S.id === state.styleId && pos === state.pos) return;
+      combos.push({S:S, pos:pos, sc: f ? scoreCombo(f, S, pos, tLen, bLen) : Math.random()*100});
+    });
+  });
+  if (!combos.length) return;
+
+  // Обмежень немає — доступні всі комбінації. Але що краще пасує до фото,
+  // те випадає частіше: вага росте квадратично від оцінки.
+  var min = Infinity, max = -Infinity;
+  combos.forEach(function(c){ if (c.sc < min) min = c.sc; if (c.sc > max) max = c.sc; });
+  var span = Math.max(1, max - min);
+
+  var total = 0;
+  combos.forEach(function(c){
+    var norm = (c.sc - min) / span;          // 0..1
+    c.w = Math.pow(0.12 + norm, 2.6);        // навіть найгірший має шанс
+    total += c.w;
+  });
+
+  var r = Math.random() * total, pick = combos[combos.length - 1];
+  for (var i = 0; i < combos.length; i++){
+    r -= combos[i].w;
+    if (r <= 0){ pick = combos[i]; break; }
+  }
+
+  applyVariant(pick.S, pick.pos);
+  maybeAccent(pick.S, f);
+  syncLayers(); syncEditor(); render();
+}
+
+function applyOwnText(raw){
+  var txt = String(raw || '').replace(/\r/g,'').trim();
+  if (!txt) return false;
+  var title, body;
+  var parts = txt.split(/\n\s*\n/);
+  if (parts.length > 1){
+    title = parts[0].trim();
+    body  = parts.slice(1).join('\n').trim();
+  } else {
+    var ls = txt.split('\n');
+    title = ls[0].trim();
+    body  = ls.slice(1).join('\n').trim();
+  }
+  state.textIdx = -1;
+  setText(title, body);
+  syncTexts();
+  return true;
 }
 
 function layout(pos){
@@ -884,15 +1228,30 @@ function layout(pos){
 
 /* ═══════════ інтерфейс: збірка ═══════════ */
 
+function photoById(id){
+  for (var i = 0; i < photos.length; i++) if (photos[i].id === id) return photos[i];
+  return null;
+}
+
+/* Коротка назва фото з опису: «Зона мийок: три чорні крісла…» → «Зона мийок» */
+function shortDesc(p){
+  var d = p && p.desc ? p.desc : '';
+  if (!d) return p ? p.name : '';
+  var i = d.indexOf(':');
+  if (i > 0) return d.slice(0, i);
+  return d.split(/[,—]/)[0].trim() || p.name;
+}
+
 function buildGallery(){
   var g = $('gal'); g.innerHTML = '';
   photos.forEach(function(p){
     var im = new Image();
     im.src = p.thumb || p.src;
-    im.title = p.name;
+    im.title = p.desc || p.name;
     im.dataset.id = p.id;
     if (p.id === state.photoId) im.className = 'on';
     im.onclick = function(){ selectPhoto(p.id); };
+    thumbImgs[p.id] = im;
     g.appendChild(im);
   });
 }
@@ -902,6 +1261,9 @@ function selectPhoto(id){
   state.img = {scale:1, ox:0, oy:0};
   var g = $('gal').children;
   for (var i = 0; i < g.length; i++) g[i].className = (g[i].dataset.id === id ? 'on' : '');
+  var cur = photoById(id);
+  $('pdesc').textContent = cur && cur.desc ? cur.desc : '';
+  syncMatch();
   $('zoom').value = 1; $('zoomv').textContent = '100%';
   if (!images[id]){
     var p = photos.filter(function(x){ return x.id === id; })[0];
@@ -947,6 +1309,28 @@ function syncTexts(){
   $('counter').textContent = state.textIdx >= 0
     ? (state.textIdx+1) + ' / ' + texts.length
     : texts.length + ' текстів';
+  syncMatch();
+}
+
+/* Підказка «яке фото пасує до цього тексту» — з описів фото в photos.js */
+function syncMatch(){
+  var box = $('tmatch');
+  if (!box) return;
+  box.innerHTML = '';
+
+  var t = state.textIdx >= 0 ? texts[state.textIdx] : null;
+  if (!t || !t.photos || !t.photos.length) return;
+
+  box.appendChild(el('span','hint','Пасує до тексту:'));
+  t.photos.forEach(function(pid){
+    var p = photoById(pid);
+    if (!p) return;
+    var b = el('button','sm' + (pid === state.photoId ? ' on' : ''), shortDesc(p));
+    b.title = p.desc || '';
+    b.style.cssText = 'padding:4px 8px; font-size:11.5px';
+    b.onclick = function(){ selectPhoto(pid); render(); };
+    box.appendChild(b);
+  });
 }
 
 function syncLayers(){
@@ -1070,7 +1454,7 @@ $('lup').onclick = moveLayer(-1);
 $('ldn').onclick = moveLayer(1);
 
 Array.prototype.forEach.call(document.querySelectorAll('[data-lay]'), function(b){
-  b.onclick = function(){ layout(b.dataset.lay); render(); };
+  b.onclick = function(){ state.pos = b.dataset.lay; layout(state.pos); render(); };
 });
 
 $('addown').onclick = function(){
@@ -1100,6 +1484,12 @@ $('emo').onclick = function(){
   $('emo').textContent = state.emoji ? '😊 з емодзі' : '😶 без емодзі';
   if (state.textIdx >= 0) addPreset(state.textIdx);
 };
+
+$('autogo').onclick = function(){
+  if (!applyOwnText($('autotext').value)) { $('autotext').focus(); return; }
+  autopick();
+};
+$('roll').onclick = function(){ autopick(); };
 
 $('prev').onclick = function(){
   if (!texts.length) return;
