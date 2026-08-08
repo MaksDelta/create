@@ -1,0 +1,1370 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Пости для Instagram</title>
+<style>
+  :root{
+    --bg:#141416; --panel:#1c1c20; --panel2:#26262c; --line:#33333c;
+    --txt:#eceef2; --dim:#8d8f9a; --acc:#e8b04b; --acc2:#f2c974;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  header{
+    flex:0 0 auto; display:flex; align-items:center; gap:14px;
+    padding:10px 16px; border-bottom:1px solid var(--line); background:var(--panel);
+  }
+  header h1{font-size:15px; margin:0; font-weight:600; letter-spacing:.2px}
+  header .sp{flex:1}
+  .main{flex:1; display:flex; min-height:0}
+
+  /* ——— бічна панель ——— */
+  aside{
+    width:340px; flex:0 0 340px; border-right:1px solid var(--line);
+    background:var(--panel); overflow-y:auto; overscroll-behavior:contain;
+  }
+  aside.right{border-right:none; border-left:1px solid var(--line); width:330px; flex-basis:330px}
+  section{border-bottom:1px solid var(--line)}
+  section > h2{
+    margin:0; padding:12px 14px 10px; font-size:11px; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase; color:var(--dim);
+  }
+  .pad{padding:0 14px 14px}
+
+  /* ——— елементи керування ——— */
+  .row{display:flex; gap:8px; align-items:center}
+  .row + .row{margin-top:9px}
+  label.lbl{font-size:12px; color:var(--dim); min-width:74px; flex:0 0 auto}
+  button, .btn{
+    font:inherit; font-size:13px; color:var(--txt); background:var(--panel2);
+    border:1px solid var(--line); border-radius:8px; padding:7px 11px;
+    cursor:pointer; transition:.13s; white-space:nowrap;
+  }
+  button:hover,.btn:hover{background:#32323a; border-color:#4a4a56}
+  button.on{background:var(--acc); border-color:var(--acc); color:#1a1408; font-weight:600}
+  button.primary{background:var(--acc); border-color:var(--acc); color:#1a1408; font-weight:650}
+  button.primary:hover{background:var(--acc2); border-color:var(--acc2)}
+  button.sm{padding:5px 8px; font-size:12px}
+  button.ghost{background:transparent}
+  .chips{display:flex; flex-wrap:wrap; gap:6px}
+  input[type=range]{flex:1; accent-color:var(--acc); min-width:0}
+  input[type=color]{
+    width:34px; height:28px; padding:0; border:1px solid var(--line);
+    border-radius:7px; background:var(--panel2); cursor:pointer;
+  }
+  input[type=text], textarea, select{
+    font:inherit; font-size:13px; width:100%; color:var(--txt);
+    background:var(--panel2); border:1px solid var(--line);
+    border-radius:8px; padding:8px 9px; resize:vertical;
+  }
+  textarea{line-height:1.4; min-height:74px}
+  input:focus,textarea:focus,select:focus{outline:none; border-color:var(--acc)}
+  .val{font-size:11px; color:var(--dim); min-width:38px; text-align:right; font-variant-numeric:tabular-nums}
+  .hint{font-size:11.5px; color:var(--dim); line-height:1.5}
+
+  /* ——— галерея фото ——— */
+  .gal{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+  .gal img{
+    width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:8px;
+    cursor:pointer; border:2px solid transparent; display:block; transition:.13s;
+  }
+  .gal img:hover{border-color:#5a5a66}
+  .gal img.on{border-color:var(--acc)}
+
+  /* ——— тексти ——— */
+  .tlist{display:flex; flex-direction:column; gap:6px}
+  .tcard{
+    text-align:left; padding:9px 10px; line-height:1.35; white-space:normal;
+    border-radius:9px; background:var(--panel2); border:1px solid var(--line); cursor:pointer;
+  }
+  .tcard:hover{background:#32323a}
+  .tcard b{display:block; font-size:12.5px; font-weight:650; margin-bottom:2px}
+  .tcard span{font-size:11.5px; color:var(--dim); display:block}
+
+  /* ——— шари ——— */
+  .layers{display:flex; flex-direction:column; gap:5px}
+  .lay{
+    display:flex; align-items:center; gap:7px; padding:6px 8px; border-radius:8px;
+    background:var(--panel2); border:1px solid var(--line); cursor:pointer;
+  }
+  .lay.on{border-color:var(--acc); background:#2f2a1c}
+  .lay .nm{flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lay .x{opacity:.5; padding:2px 5px; border:none; background:none; font-size:14px; line-height:1}
+  .lay .x:hover{opacity:1; color:#ff7676; background:none}
+
+  /* ——— сцена ——— */
+  .stage{
+    flex:1; min-width:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:12px; padding:18px; background:
+      repeating-conic-gradient(#191920 0% 25%, #1e1e26 0% 50%) 50%/22px 22px;
+  }
+  #cv{
+    max-width:100%; border-radius:4px; box-shadow:0 10px 40px rgba(0,0,0,.55);
+    cursor:grab; touch-action:none; display:block;
+  }
+  #cv.grabbing{cursor:grabbing}
+  .stagebar{display:flex; gap:8px; align-items:center; font-size:12px; color:var(--dim)}
+  .empty{color:var(--dim); font-size:14px; text-align:center; max-width:280px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#3a3a44; border-radius:6px; border:2px solid var(--panel)}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ——— вкладки: тільки на телефоні ——— */
+  .tabbar{display:none}
+  .short{display:none}
+
+  /* ═══════════ ТЕЛЕФОН / ПЛАНШЕТ ═══════════ */
+  @media (max-width:900px){
+    /* нічого не має бути ширшим за екран */
+    body > *{width:100%; min-width:0}
+    .main, .stage, aside, aside.right, .tabbar{min-width:0; max-width:100%}
+
+    .full{display:none}
+    .short{display:inline}
+
+    header{padding:8px 10px; gap:8px}
+    header h1{font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    #dims{display:none}
+    #quality{padding:7px 6px}
+
+    .main{flex-direction:column}
+
+    /* фото зверху, фіксованої висоти */
+    .stage{order:1; flex:0 0 auto; height:50vh; height:50dvh; padding:8px; gap:6px}
+    #cv{box-shadow:0 6px 20px rgba(0,0,0,.5)}
+    .stagebar button{padding:6px 9px}
+
+    /* панель вкладок */
+    .tabbar{
+      order:2; display:flex; flex:0 0 auto; gap:6px; padding:8px 10px;
+      background:var(--panel); border-top:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+    }
+    .tabbar button{flex:1; padding:10px 4px; font-size:12.5px}
+
+    /* решта — одна прокрутна зона */
+    aside, aside.right{
+      order:3; display:none; width:auto; flex:1 1 auto; min-height:0;
+      border:none; -webkit-overflow-scrolling:touch;
+    }
+    body[data-tab="photo"]  aside.left,
+    body[data-tab="format"] aside.left,
+    body[data-tab="text"]   aside.right,
+    body[data-tab="style"]  aside.right{display:block}
+
+    section{display:none}
+    body[data-tab="photo"]  section[data-tab="photo"],
+    body[data-tab="format"] section[data-tab="format"],
+    body[data-tab="text"]   section[data-tab="text"],
+    body[data-tab="style"]  section[data-tab="style"]{display:block}
+
+    /* більші зони натискання */
+    button,.btn{padding:9px 12px}
+    button.sm{padding:8px 11px}
+    input[type=color]{width:40px; height:32px}
+    input[type=range]{height:26px}
+    label.lbl{min-width:66px; font-size:11.5px}
+    .gal{grid-template-columns:repeat(5,1fr)}
+    .pad{padding:0 12px 16px}
+    section > h2{padding:14px 12px 8px}
+  }
+
+  @media (max-width:430px){
+    .gal{grid-template-columns:repeat(4,1fr)}
+    .stagebar{font-size:11px; gap:6px}
+    .tabbar button{font-size:12px; padding:10px 2px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Пости для Instagram</h1>
+  <span class="sp"></span>
+  <span class="hint" id="dims">—</span>
+  <select id="quality" style="width:auto">
+    <option value="1080">1080 px</option>
+    <option value="1440">1440 px</option>
+    <option value="2160">2160 px</option>
+  </select>
+  <button class="primary" id="dl"><span class="full">↓ Завантажити PNG</span><span class="short">↓ Зберегти</span></button>
+</header>
+
+<div class="main">
+
+  <!-- ЛІВА ПАНЕЛЬ -->
+  <aside class="left">
+    <section data-tab="photo">
+      <h2>1. Фото</h2>
+      <div class="pad">
+        <div class="gal" id="gal"></div>
+        <div class="row" style="margin-top:10px">
+          <label class="btn sm" style="flex:1;text-align:center">
+            + Своє фото<input type="file" id="up" accept="image/*" multiple hidden>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section data-tab="format">
+      <h2>2. Формат</h2>
+      <div class="pad">
+        <div class="chips" id="ratios"></div>
+      </div>
+    </section>
+
+    <section data-tab="photo">
+      <h2>3. Кадрування</h2>
+      <div class="pad">
+        <div class="row">
+          <label class="lbl">Масштаб</label>
+          <input type="range" id="zoom" min="0.3" max="3" step="0.01" value="1">
+          <span class="val" id="zoomv">100%</span>
+        </div>
+        <div class="row">
+          <button class="sm" id="fill">Заповнити</button>
+          <button class="sm" id="fit">Вписати</button>
+          <button class="sm" id="creset">Скинути</button>
+        </div>
+        <div class="row"><span class="hint">Тягніть фото мишкою, щоб пересунути. Колесо миші — масштаб.</span></div>
+        <div class="row">
+          <label class="lbl">Поле</label>
+          <input type="color" id="bg" value="#111111">
+          <span class="hint">колір за фото</span>
+        </div>
+      </div>
+    </section>
+
+    <section data-tab="format">
+      <h2>4. Затемнення</h2>
+      <div class="pad">
+        <div class="chips" id="scrims"></div>
+        <div class="row">
+          <label class="lbl">Сила</label>
+          <input type="range" id="scrimv" min="0" max="1" step="0.01" value="0.62">
+          <span class="val" id="scrimvv">62%</span>
+        </div>
+        <div class="row">
+          <label class="lbl">Колір</label>
+          <input type="color" id="scrimc" value="#000000">
+          <span class="hint">тінь під текстом</span>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <!-- СЦЕНА -->
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="stagebar">
+      <button class="sm ghost" id="prev"><span class="full">← попередній текст</span><span class="short">←</span></button>
+      <span id="counter">—</span>
+      <button class="sm ghost" id="next"><span class="full">наступний текст →</span><span class="short">→</span></button>
+    </div>
+  </div>
+
+  <!-- ВКЛАДКИ (видно лише на телефоні) -->
+  <nav class="tabbar" id="tabbar">
+    <button data-t="photo" class="on">Фото</button>
+    <button data-t="format">Формат</button>
+    <button data-t="text">Текст</button>
+    <button data-t="style">Стиль</button>
+  </nav>
+
+  <!-- ПРАВА ПАНЕЛЬ -->
+  <aside class="right">
+    <section data-tab="text">
+      <h2>5. Готові тексти</h2>
+      <div class="pad">
+        <div class="row" style="margin-bottom:9px">
+          <button class="sm on" id="emo">😊 з емодзі</button>
+          <button class="sm" id="addown">+ свій текст</button>
+        </div>
+        <div class="tlist" id="tlist"></div>
+      </div>
+    </section>
+
+    <section data-tab="style">
+      <h2>6. Стиль тексту</h2>
+      <div class="pad">
+        <div class="chips" id="styles"></div>
+        <div class="row"><span class="hint">Стиль міняє шрифт, колір, затемнення й розташування одразу.</span></div>
+      </div>
+    </section>
+
+    <section data-tab="style">
+      <h2>7. Розкладка</h2>
+      <div class="pad">
+        <div class="chips">
+          <button class="sm" data-lay="top">Вгорі</button>
+          <button class="sm" data-lay="center">По центру</button>
+          <button class="sm" data-lay="bottom">Внизу</button>
+        </div>
+      </div>
+    </section>
+
+    <section data-tab="style">
+      <h2>8. Шари тексту</h2>
+      <div class="pad">
+        <div class="layers" id="layers"></div>
+        <div id="noLayers" class="hint" style="padding:4px 0">Оберіть текст зі списку вище.</div>
+
+        <div id="editor" style="display:none; margin-top:12px">
+          <textarea id="ltext" placeholder="Текст…"></textarea>
+          <div class="row" style="margin-top:9px">
+            <label class="lbl">Шрифт</label>
+            <select id="lfont"></select>
+          </div>
+          <div class="row">
+            <label class="lbl">Товщина</label>
+            <select id="lweight">
+              <option value="300">Тонкий</option>
+              <option value="400">Звичайний</option>
+              <option value="600">Напівжирний</option>
+              <option value="700" selected>Жирний</option>
+              <option value="900">Дуже жирний</option>
+            </select>
+          </div>
+          <div class="row">
+            <label class="lbl">Розмір</label>
+            <input type="range" id="lsize" min="0.018" max="0.18" step="0.001">
+            <span class="val" id="lsizev"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Міжряддя</label>
+            <input type="range" id="llh" min="0.85" max="2" step="0.01">
+            <span class="val" id="llhv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Розрядка</label>
+            <input type="range" id="ltr" min="-0.03" max="0.3" step="0.005">
+            <span class="val" id="ltrv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Ширина</label>
+            <input type="range" id="lmw" min="0.3" max="0.96" step="0.01">
+            <span class="val" id="lmwv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Колір</label>
+            <input type="color" id="lcolor">
+            <div class="chips" id="swatches"></div>
+          </div>
+          <div class="row">
+            <label class="lbl">Вирівняти</label>
+            <div class="chips" id="align">
+              <button class="sm" data-al="left">◧</button>
+              <button class="sm" data-al="center">◎</button>
+              <button class="sm" data-al="right">◨</button>
+            </div>
+            <button class="sm" id="lupper">ВЕЛИКІ</button>
+          </div>
+          <div class="row">
+            <label class="lbl">Тінь</label>
+            <input type="range" id="lshadow" min="0" max="1" step="0.02">
+            <span class="val" id="lshadowv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Обведення</label>
+            <input type="range" id="lstroke" min="0" max="0.2" step="0.005">
+            <input type="color" id="lstrokec" value="#000000">
+          </div>
+          <div class="row">
+            <label class="lbl">Підкладка</label>
+            <button class="sm" id="lbox">вимк.</button>
+            <input type="color" id="lboxc" value="#000000">
+            <input type="range" id="lboxo" min="0" max="1" step="0.02" style="max-width:80px">
+          </div>
+          <div class="row">
+            <button class="sm" id="ldup">Дублювати</button>
+            <button class="sm" id="lup">↑</button>
+            <button class="sm" id="ldn">↓</button>
+            <button class="sm" id="ldel" style="margin-left:auto">Видалити</button>
+          </div>
+          <div class="row"><span class="hint">Тягніть текст на фото мишкою. Стрілки на клавіатурі — точне зміщення.</span></div>
+        </div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<script src="photos.js"></script>
+<script src="texts.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ═══════════ дані ═══════════ */
+
+var RATIOS = [
+  {id:'1:1',   w:1, h:1,    label:'1:1 квадрат'},
+  {id:'4:5',   w:4, h:5,    label:'4:5 пост'},
+  {id:'3:4',   w:3, h:4,    label:'3:4'},
+  {id:'9:16',  w:9, h:16,   label:'9:16 Stories'},
+  {id:'1.91:1',w:1.91,h:1,  label:'1.91:1'},
+  {id:'16:9',  w:16,h:9,    label:'16:9'},
+];
+
+var FONTS = [
+  {v:'"Helvetica Neue", Helvetica, Arial, sans-serif', n:'Helvetica'},
+  {v:'"Avenir Next", Avenir, sans-serif',              n:'Avenir Next'},
+  {v:'Futura, "Trebuchet MS", sans-serif',             n:'Futura'},
+  {v:'"Gill Sans", "Gill Sans MT", sans-serif',        n:'Gill Sans'},
+  {v:'Georgia, "Times New Roman", serif',              n:'Georgia'},
+  {v:'"Didot", "Bodoni 72", Georgia, serif',           n:'Didot'},
+  {v:'"Courier New", monospace',                       n:'Courier'},
+  {v:'Impact, "Arial Black", sans-serif',              n:'Impact'},
+];
+
+var SWATCHES = ['#ffffff','#000000','#ede6da','#e8b04b','#e86aa6','#c9c2b6'];
+
+/* короткі імена шрифтів для описів стилів */
+var F = {
+  helv:FONTS[0].v, avenir:FONTS[1].v, futura:FONTS[2].v, gill:FONTS[3].v,
+  georgia:FONTS[4].v, didot:FONTS[5].v, courier:FONTS[6].v, impact:FONTS[7].v,
+};
+
+/* ═══════════ готові стилі тексту ═══════════
+   Порядок — від найходовіших у SMM.
+   Кожен стиль задає вигляд заголовка, підпису, затемнення і розташування. */
+
+var STYLES = [
+  { id:'classic', n:'Класика',
+    scrim:{type:'bottom', strength:0.62, color:'#000000'}, pos:'bottom',
+    title:{font:F.helv, weight:'700', size:0.077, tracking:0.005, lineHeight:1.14,
+           color:'#ffffff', shadow:0.45, maxWidth:0.86, align:'center'},
+    body: {font:F.helv, weight:'400', size:0.040, tracking:0.005, lineHeight:1.35,
+           color:'#ffffff', shadow:0.50, maxWidth:0.88, align:'center'} },
+
+  { id:'subs', n:'Субтитри',
+    scrim:{type:'none', strength:0, color:'#000000'}, pos:'bottom',
+    title:{font:F.helv, weight:'700', size:0.062, tracking:0.005, lineHeight:1.30,
+           color:'#ffffff', shadow:0, maxWidth:0.80, align:'center',
+           box:true, boxColor:'#000000', boxOpacity:0.78},
+    body: {font:F.helv, weight:'400', size:0.034, tracking:0.005, lineHeight:1.40,
+           color:'#ffffff', shadow:0, maxWidth:0.80, align:'center',
+           box:true, boxColor:'#000000', boxOpacity:0.78} },
+
+  { id:'highlight', n:'Хайлайт',
+    scrim:{type:'bottom', strength:0.45, color:'#000000'}, pos:'bottom',
+    title:{font:F.helv, weight:'700', size:0.058, tracking:0.03, lineHeight:1.34,
+           color:'#1a1408', shadow:0, upper:true, maxWidth:0.78, align:'center',
+           box:true, boxColor:'#e8b04b', boxOpacity:0.95},
+    body: {font:F.helv, weight:'400', size:0.034, tracking:0.01, lineHeight:1.40,
+           color:'#ffffff', shadow:0.5, maxWidth:0.84, align:'center'} },
+
+  { id:'outline', n:'Обведення',
+    scrim:{type:'none', strength:0, color:'#000000'}, pos:'bottom',
+    title:{font:F.helv, weight:'900', size:0.082, tracking:0, lineHeight:1.10,
+           color:'#ffffff', shadow:0, upper:true, maxWidth:0.88, align:'center',
+           stroke:0.09, strokeColor:'#000000'},
+    body: {font:F.helv, weight:'700', size:0.036, tracking:0.01, lineHeight:1.35,
+           color:'#ffffff', shadow:0, maxWidth:0.84, align:'center',
+           stroke:0.10, strokeColor:'#000000'} },
+
+  { id:'caps', n:'Капси',
+    scrim:{type:'full', strength:0.48, color:'#000000'}, pos:'center',
+    title:{font:F.helv, weight:'900', size:0.090, tracking:-0.005, lineHeight:1.05,
+           color:'#ffffff', shadow:0.25, upper:true, maxWidth:0.90, align:'center'},
+    body: {font:F.helv, weight:'400', size:0.034, tracking:0.02, lineHeight:1.45,
+           color:'#ffffff', shadow:0.25, maxWidth:0.80, align:'center'} },
+
+  { id:'card', n:'Біла картка',
+    scrim:{type:'none', strength:0, color:'#000000'}, pos:'center',
+    title:{font:F.helv, weight:'700', size:0.062, tracking:0.01, lineHeight:1.22,
+           color:'#141414', shadow:0, upper:true, maxWidth:0.72, align:'center',
+           box:true, boxColor:'#ffffff', boxOpacity:0.93},
+    body: {font:F.helv, weight:'400', size:0.032, tracking:0.01, lineHeight:1.45,
+           color:'#141414', shadow:0, maxWidth:0.70, align:'center',
+           box:true, boxColor:'#ffffff', boxOpacity:0.93} },
+
+  { id:'minimal', n:'Мінімал',
+    scrim:{type:'full', strength:0.45, color:'#000000'}, pos:'center',
+    title:{font:F.avenir, weight:'300', size:0.058, tracking:0.16, lineHeight:1.55,
+           color:'#ffffff', shadow:0.15, upper:true, maxWidth:0.80, align:'center'},
+    body: {font:F.avenir, weight:'300', size:0.029, tracking:0.06, lineHeight:1.65,
+           color:'#ffffff', shadow:0.15, maxWidth:0.74, align:'center'} },
+
+  { id:'mag', n:'Журнал',
+    scrim:{type:'both', strength:0.58, color:'#000000'}, pos:'top',
+    title:{font:F.didot, weight:'400', size:0.095, tracking:-0.01, lineHeight:1.06,
+           color:'#ffffff', shadow:0.35, maxWidth:0.88, align:'center'},
+    body: {font:F.avenir, weight:'400', size:0.028, tracking:0.14, lineHeight:1.6,
+           color:'#ffffff', shadow:0.35, upper:true, maxWidth:0.70, align:'center'} },
+
+  { id:'left', n:'Ліворуч',
+    scrim:{type:'bottom', strength:0.66, color:'#000000'}, pos:'bottom',
+    title:{font:F.futura, weight:'700', size:0.070, tracking:0.005, lineHeight:1.12,
+           color:'#ffffff', shadow:0.35, upper:true, maxWidth:0.78, align:'left'},
+    body: {font:F.futura, weight:'400', size:0.033, tracking:0.02, lineHeight:1.45,
+           color:'#ede6da', shadow:0.35, maxWidth:0.74, align:'left'} },
+
+  { id:'gold', n:'Золото',
+    scrim:{type:'bottom', strength:0.70, color:'#000000'}, pos:'bottom',
+    title:{font:F.helv, weight:'900', size:0.078, tracking:0, lineHeight:1.10,
+           color:'#e8b04b', shadow:0.5, upper:true, maxWidth:0.88, align:'center'},
+    body: {font:F.helv, weight:'400', size:0.036, tracking:0.01, lineHeight:1.38,
+           color:'#ffffff', shadow:0.5, maxWidth:0.86, align:'center'} },
+
+  { id:'soft', n:'М’який',
+    scrim:{type:'bottom', strength:0.55, color:'#2a1f14'}, pos:'bottom',
+    title:{font:F.georgia, weight:'400', size:0.072, tracking:0, lineHeight:1.22,
+           color:'#ede6da', shadow:0.30, maxWidth:0.84, align:'center'},
+    body: {font:F.georgia, weight:'400', size:0.034, tracking:0.01, lineHeight:1.48,
+           color:'#ede6da', shadow:0.30, maxWidth:0.82, align:'center'} },
+
+  { id:'story', n:'Сторіс',
+    scrim:{type:'top', strength:0.60, color:'#000000'}, pos:'top',
+    title:{font:F.helv, weight:'700', size:0.068, tracking:0.02, lineHeight:1.20,
+           color:'#ffffff', shadow:0.35, upper:true, maxWidth:0.84, align:'center'},
+    body: {font:F.helv, weight:'400', size:0.032, tracking:0.02, lineHeight:1.45,
+           color:'#ffffff', shadow:0.35, maxWidth:0.80, align:'center'} },
+];
+
+var SCRIMS = [
+  {id:'none',   n:'Немає'},
+  {id:'bottom', n:'Знизу'},
+  {id:'top',    n:'Зверху'},
+  {id:'both',   n:'З двох боків'},
+  {id:'full',   n:'Все фото'},
+];
+
+/* ═══════════ стан ═══════════ */
+
+var state = {
+  photoId: null,
+  ratio: RATIOS[1],           // 4:5 за замовчуванням
+  img:  {scale:1, ox:0, oy:0},
+  bg:   '#111111',
+  scrim:{type:'bottom', strength:0.62, color:'#000000'},
+  layers: [],
+  sel: null,
+  emoji: true,
+  textIdx: -1,
+  styleId: 'classic',
+};
+
+var images = {};              // id -> HTMLImageElement
+var photos = (typeof PHOTOS !== 'undefined' ? PHOTOS : []).slice();
+var texts  = (typeof TEXTS  !== 'undefined' ? TEXTS  : []).slice();
+var uid = 0;
+
+var cv = document.getElementById('cv');
+var ctx = cv.getContext('2d');
+var SUPPORTS_TRACKING = ('letterSpacing' in ctx);
+
+/* ═══════════ помічники ═══════════ */
+
+function $(id){ return document.getElementById(id); }
+function el(tag, cls, txt){
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+function pct(v){ return Math.round(v*100)+'%'; }
+function hexA(hex, a){
+  var h = hex.replace('#','');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n = parseInt(h,16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+}
+function currentImage(){ return state.photoId ? images[state.photoId] : null; }
+
+/* ═══════════ малювання ═══════════ */
+
+/* Розмір тексту рахуємо від вужчої сторони кадру, щоб він виглядав
+   однаково при переході між 4:5, 9:16, 1:1 тощо. */
+function refSize(W, H){ return Math.min(W, H); }
+
+function fontStr(L, R){
+  return L.weight + ' ' + (L.size * R) + 'px ' + L.font;
+}
+
+function wrap(c, text, maxW){
+  var out = [];
+  var paras = String(text).split('\n');
+  for (var p = 0; p < paras.length; p++){
+    var words = paras[p].split(/ +/);
+    var line = '';
+    for (var i = 0; i < words.length; i++){
+      var test = line ? line + ' ' + words[i] : words[i];
+      if (line && c.measureText(test).width > maxW){ out.push(line); line = words[i]; }
+      else line = test;
+    }
+    out.push(line);
+  }
+  return out;
+}
+
+/* Обчислює геометрію шару в пікселях кадру W×H. */
+function measure(c, L, W, H){
+  var R = refSize(W, H);
+  var fs = L.size * R;
+  c.font = fontStr(L, R);
+  if (SUPPORTS_TRACKING) c.letterSpacing = (L.tracking * fs) + 'px';
+  var txt = L.upper ? L.text.toLocaleUpperCase('uk') : L.text;
+  var lines = wrap(c, txt, L.maxWidth * W);
+  var lw = 0;
+  for (var i = 0; i < lines.length; i++) lw = Math.max(lw, c.measureText(lines[i]).width);
+  var lh = fs * L.lineHeight;
+  var h = lh * lines.length;
+  if (SUPPORTS_TRACKING) c.letterSpacing = '0px';
+  return {lines:lines, fs:fs, lh:lh, w:lw, h:h};
+}
+
+function drawLayer(c, L, W, H){
+  var m = measure(c, L, W, H);
+  var x = L.x * W, y = L.y * H;
+  var left = L.align === 'left' ? x : (L.align === 'right' ? x - m.w : x - m.w/2);
+
+  L._box = {x:left, y:y, w:m.w, h:m.h};   // для перетягування
+
+  if (L.box && L.boxOpacity > 0){
+    var pad = m.fs * 0.5;
+    c.fillStyle = hexA(L.boxColor, L.boxOpacity);
+    var r = Math.min(pad, 18);
+    var bx = left - pad, by = y - pad*0.45, bw = m.w + pad*2, bh = m.h + pad*0.9;
+    c.beginPath();
+    if (c.roundRect) c.roundRect(bx, by, bw, bh, r);
+    else c.rect(bx, by, bw, bh);
+    c.fill();
+  }
+
+  c.save();
+  c.font = fontStr(L, refSize(W, H));
+  if (SUPPORTS_TRACKING) c.letterSpacing = (L.tracking * m.fs) + 'px';
+  c.textAlign = L.align;
+  c.textBaseline = 'alphabetic';
+  c.fillStyle = L.color;
+  if (L.shadow > 0){
+    c.shadowColor = 'rgba(0,0,0,' + (L.shadow * 0.85) + ')';
+    c.shadowBlur = m.fs * 0.6 * L.shadow;
+    c.shadowOffsetY = m.fs * 0.06 * L.shadow;
+  }
+  if (L.stroke > 0){
+    c.lineWidth = m.fs * L.stroke;
+    c.strokeStyle = L.strokeColor || '#000000';
+    c.lineJoin = 'round';
+    c.miterLimit = 2;
+  }
+  for (var i = 0; i < m.lines.length; i++){
+    // базова лінія ≈ 0.80 від висоти рядка від його верху
+    var by = y + i*m.lh + m.fs*0.80;
+    if (L.stroke > 0) c.strokeText(m.lines[i], x, by);
+    c.fillText(m.lines[i], x, by);
+  }
+  c.restore();
+}
+
+function drawScrim(c, W, H){
+  var s = state.scrim;
+  if (s.type === 'none' || s.strength <= 0) return;
+  var a = s.strength;
+  var g;
+  if (s.type === 'full'){
+    c.fillStyle = hexA(s.color, a);
+    c.fillRect(0,0,W,H); return;
+  }
+  if (s.type === 'bottom' || s.type === 'both'){
+    g = c.createLinearGradient(0, H*0.30, 0, H);
+    g.addColorStop(0, hexA(s.color, 0));
+    g.addColorStop(0.55, hexA(s.color, a*0.55));
+    g.addColorStop(1, hexA(s.color, a));
+    c.fillStyle = g; c.fillRect(0, H*0.30, W, H*0.70);
+  }
+  if (s.type === 'top' || s.type === 'both'){
+    g = c.createLinearGradient(0, 0, 0, H*0.60);
+    g.addColorStop(0, hexA(s.color, a));
+    g.addColorStop(0.45, hexA(s.color, a*0.5));
+    g.addColorStop(1, hexA(s.color, 0));
+    c.fillStyle = g; c.fillRect(0, 0, W, H*0.60);
+  }
+}
+
+/* Головна функція: малює кадр у контекст будь-якого розміру. */
+function paint(c, W, H, showSel){
+  c.clearRect(0,0,W,H);
+  c.fillStyle = state.bg;
+  c.fillRect(0,0,W,H);
+
+  var img = currentImage();
+  if (img && img.complete && img.naturalWidth){
+    var base = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+    var s = base * state.img.scale;
+    var dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+    var dx = (W - dw)/2 + state.img.ox * W;
+    var dy = (H - dh)/2 + state.img.oy * H;
+    c.drawImage(img, dx, dy, dw, dh);
+  }
+
+  drawScrim(c, W, H);
+
+  for (var i = 0; i < state.layers.length; i++) drawLayer(c, state.layers[i], W, H);
+
+  if (showSel && state.sel){
+    var L = byId(state.sel);
+    if (L && L._box){
+      var p = W * 0.012;
+      c.save();
+      c.strokeStyle = 'rgba(232,176,75,.95)';
+      c.lineWidth = Math.max(1.5, W*0.003);
+      c.setLineDash([W*0.016, W*0.012]);
+      c.strokeRect(L._box.x - p, L._box.y - p, L._box.w + p*2, L._box.h + p*2);
+      c.restore();
+    }
+  }
+}
+
+function byId(id){
+  for (var i = 0; i < state.layers.length; i++)
+    if (state.layers[i].id === id) return state.layers[i];
+  return null;
+}
+
+/* ═══════════ прев'ю ═══════════ */
+
+var previewW = 0, previewH = 0;
+
+function render(){
+  var stage = document.querySelector('.stage');
+  var bar = document.querySelector('.stagebar');
+  var cs = getComputedStyle(stage);
+  var padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  var padY = parseFloat(cs.paddingTop)  + parseFloat(cs.paddingBottom);
+  var availW = stage.clientWidth  - padX;
+  var availH = stage.clientHeight - padY - bar.offsetHeight - 14;
+  var ar = state.ratio.w / state.ratio.h;
+  var w = availW, h = w / ar;
+  if (h > availH){ h = availH; w = h * ar; }
+  w = Math.max(80, Math.floor(w)); h = Math.max(80, Math.floor(h));
+
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  previewW = w; previewH = h;
+  cv.style.width = w + 'px';
+  cv.style.height = h + 'px';
+  cv.width  = Math.round(w * dpr);
+  cv.height = Math.round(h * dpr);
+  paint(ctx, cv.width, cv.height, true);
+
+  var q = parseInt($('quality').value, 10);
+  var ow = q, oh = Math.round(q * state.ratio.h / state.ratio.w);
+  $('dims').textContent = ow + ' × ' + oh;
+}
+
+/* ═══════════ шари ═══════════ */
+
+function makeLayer(text, opts){
+  opts = opts || {};
+  var L = {
+    id: 'L' + (++uid),
+    text: text,
+    x: 0.5, y: 0.5,
+    align: 'center',
+    size: opts.size || 0.068,
+    color: opts.color || '#ffffff',
+    font: opts.font || FONTS[0].v,
+    weight: opts.weight || '700',
+    lineHeight: opts.lineHeight || 1.18,
+    tracking: opts.tracking != null ? opts.tracking : 0.01,
+    maxWidth: opts.maxWidth || 0.84,
+    upper: !!opts.upper,
+    shadow: opts.shadow != null ? opts.shadow : 0.45,
+    box: false, boxColor:'#000000', boxOpacity:0.35,
+    stroke: opts.stroke || 0, strokeColor: opts.strokeColor || '#000000',
+  };
+  state.layers.push(L);
+  return L;
+}
+
+/* ——— готові стилі ——— */
+
+function styleById(id){
+  for (var i = 0; i < STYLES.length; i++) if (STYLES[i].id === id) return STYLES[i];
+  return STYLES[0];
+}
+
+function applyProps(L, p){
+  L.font = p.font;
+  L.weight = p.weight;
+  L.size = p.size;
+  L.tracking = p.tracking;
+  L.lineHeight = p.lineHeight;
+  L.color = p.color;
+  L.upper = !!p.upper;
+  L.shadow = p.shadow || 0;
+  L.maxWidth = p.maxWidth;
+  L.align = p.align || 'center';
+  L.box = !!p.box;
+  L.boxColor = p.boxColor || '#000000';
+  L.boxOpacity = p.boxOpacity != null ? p.boxOpacity : 0.35;
+  L.stroke = p.stroke || 0;
+  L.strokeColor = p.strokeColor || '#000000';
+}
+
+function applyStyle(id){
+  var S = styleById(id);
+  state.styleId = S.id;
+
+  if (S.scrim){
+    state.scrim.type = S.scrim.type;
+    state.scrim.strength = S.scrim.strength;
+    state.scrim.color = S.scrim.color || '#000000';
+    buildScrims();
+    $('scrimv').value = state.scrim.strength;
+    $('scrimvv').textContent = pct(state.scrim.strength);
+    $('scrimc').value = state.scrim.color;
+  }
+
+  // перший шар — заголовок, решта — підпис
+  for (var i = 0; i < state.layers.length; i++)
+    applyProps(state.layers[i], i === 0 ? S.title : (S.body || S.title));
+
+  layout(S.pos || 'bottom');
+  buildStyles();
+  syncEditor();
+}
+
+function buildStyles(){
+  var box = $('styles'); box.innerHTML = '';
+  STYLES.forEach(function(S){
+    var b = el('button','sm' + (S.id === state.styleId ? ' on' : ''), S.n);
+    b.style.fontFamily = S.title.font;
+    b.style.fontWeight = S.title.weight;
+    b.onclick = function(){ applyStyle(S.id); render(); };
+    box.appendChild(b);
+  });
+}
+
+function addPreset(idx){
+  var t = texts[idx];
+  if (!t) return;
+  state.layers = [];
+  state.textIdx = idx;
+  var title = (state.emoji && t.emoji ? t.emoji + ' ' : '') + t.title;
+  makeLayer(title, {});
+  if (t.body) makeLayer(t.body, {});
+  state.sel = state.layers[0].id;
+  applyStyle(state.styleId);
+  syncLayers(); syncEditor(); syncTexts(); render();
+}
+
+function layout(pos){
+  if (!state.layers.length) return;
+  var W = 1000, H = Math.round(1000 * state.ratio.h / state.ratio.w);
+  var mc = document.createElement('canvas').getContext('2d');
+  var hs = [], total = 0, gap = H * 0.022;
+  for (var i = 0; i < state.layers.length; i++){
+    var m = measure(mc, state.layers[i], W, H);
+    hs.push(m.h); total += m.h;
+  }
+  total += gap * (state.layers.length - 1);
+
+  var y0;
+  if (pos === 'top')         y0 = H * 0.09;
+  else if (pos === 'center') y0 = (H - total) / 2;
+  else                       y0 = H * (1 - 0.085) - total;
+
+  var y = y0;
+  for (var j = 0; j < state.layers.length; j++){
+    var L = state.layers[j];
+    L.x = L.align === 'left' ? 0.08 : (L.align === 'right' ? 0.92 : 0.5);
+    L.y = y / H;
+    y += hs[j] + gap;
+  }
+}
+
+/* ═══════════ інтерфейс: збірка ═══════════ */
+
+function buildGallery(){
+  var g = $('gal'); g.innerHTML = '';
+  photos.forEach(function(p){
+    var im = new Image();
+    im.src = p.thumb || p.src;
+    im.title = p.name;
+    im.dataset.id = p.id;
+    if (p.id === state.photoId) im.className = 'on';
+    im.onclick = function(){ selectPhoto(p.id); };
+    g.appendChild(im);
+  });
+}
+
+function selectPhoto(id){
+  state.photoId = id;
+  state.img = {scale:1, ox:0, oy:0};
+  var g = $('gal').children;
+  for (var i = 0; i < g.length; i++) g[i].className = (g[i].dataset.id === id ? 'on' : '');
+  $('zoom').value = 1; $('zoomv').textContent = '100%';
+  if (!images[id]){
+    var p = photos.filter(function(x){ return x.id === id; })[0];
+    var im = new Image();
+    im.onload = render;
+    im.src = p.src;
+    images[id] = im;
+  }
+  render();
+}
+
+function buildRatios(){
+  var box = $('ratios'); box.innerHTML = '';
+  RATIOS.forEach(function(r){
+    var b = el('button','sm' + (r.id === state.ratio.id ? ' on' : ''), r.label);
+    b.onclick = function(){
+      state.ratio = r;
+      buildRatios();
+      render();
+    };
+    box.appendChild(b);
+  });
+}
+
+function buildScrims(){
+  var box = $('scrims'); box.innerHTML = '';
+  SCRIMS.forEach(function(s){
+    var b = el('button','sm' + (s.id === state.scrim.type ? ' on' : ''), s.n);
+    b.onclick = function(){ state.scrim.type = s.id; buildScrims(); render(); };
+    box.appendChild(b);
+  });
+}
+
+function syncTexts(){
+  var box = $('tlist'); box.innerHTML = '';
+  texts.forEach(function(t, i){
+    var b = el('button','tcard' + (i === state.textIdx ? ' on' : ''));
+    b.appendChild(el('b', null, (t.emoji ? t.emoji + ' ' : '') + t.title.replace(/\n/g,' ')));
+    if (t.body) b.appendChild(el('span', null, t.body.replace(/\n/g,' ')));
+    b.onclick = function(){ addPreset(i); };
+    box.appendChild(b);
+  });
+  $('counter').textContent = state.textIdx >= 0
+    ? (state.textIdx+1) + ' / ' + texts.length
+    : texts.length + ' текстів';
+}
+
+function syncLayers(){
+  var box = $('layers'); box.innerHTML = '';
+  state.layers.forEach(function(L){
+    var d = el('div','lay' + (L.id === state.sel ? ' on' : ''));
+    d.appendChild(el('span','nm', L.text.replace(/\n/g,' ').slice(0,40) || '(порожньо)'));
+    var x = el('button','x','×');
+    x.onclick = function(e){
+      e.stopPropagation();
+      state.layers = state.layers.filter(function(o){ return o.id !== L.id; });
+      if (state.sel === L.id) state.sel = state.layers.length ? state.layers[0].id : null;
+      syncLayers(); syncEditor(); render();
+    };
+    d.appendChild(x);
+    d.onclick = function(){ state.sel = L.id; syncLayers(); syncEditor(); render(); };
+    box.appendChild(d);
+  });
+  $('noLayers').style.display = state.layers.length ? 'none' : 'block';
+}
+
+function syncEditor(){
+  var L = state.sel ? byId(state.sel) : null;
+  $('editor').style.display = L ? 'block' : 'none';
+  if (!L) return;
+  $('ltext').value = L.text;
+  $('lfont').value = L.font;
+  $('lweight').value = L.weight;
+  $('lsize').value = L.size;    $('lsizev').textContent = Math.round(L.size*1000)/10;
+  $('llh').value = L.lineHeight;$('llhv').textContent = L.lineHeight.toFixed(2);
+  $('ltr').value = L.tracking;  $('ltrv').textContent = Math.round(L.tracking*100);
+  $('lmw').value = L.maxWidth;  $('lmwv').textContent = pct(L.maxWidth);
+  $('lcolor').value = L.color;
+  $('lshadow').value = L.shadow;$('lshadowv').textContent = pct(L.shadow);
+  $('lstroke').value = L.stroke || 0;
+  $('lstrokec').value = L.strokeColor || '#000000';
+  $('lupper').className = 'sm' + (L.upper ? ' on' : '');
+  $('lbox').className = 'sm' + (L.box ? ' on' : '');
+  $('lbox').textContent = L.box ? 'увімк.' : 'вимк.';
+  $('lboxc').value = L.boxColor;
+  $('lboxo').value = L.boxOpacity;
+  var ab = $('align').children;
+  for (var i = 0; i < ab.length; i++)
+    ab[i].className = 'sm' + (ab[i].dataset.al === L.align ? ' on' : '');
+}
+
+function withSel(fn){
+  return function(){
+    var L = state.sel ? byId(state.sel) : null;
+    if (!L) return;
+    fn(L);
+    render();
+  };
+}
+
+/* ═══════════ прив'язка подій ═══════════ */
+
+FONTS.forEach(function(f){
+  var o = el('option', null, f.n); o.value = f.v; $('lfont').appendChild(o);
+});
+
+SWATCHES.forEach(function(c){
+  var b = el('button','sm');
+  b.style.cssText = 'width:22px;height:22px;padding:0;background:'+c+';border-color:#4a4a56';
+  b.onclick = withSel(function(L){ L.color = c; $('lcolor').value = c; });
+  $('swatches').appendChild(b);
+});
+
+$('ltext').oninput   = withSel(function(L){ L.text = $('ltext').value; syncLayers(); });
+$('lfont').onchange  = withSel(function(L){ L.font = $('lfont').value; });
+$('lweight').onchange= withSel(function(L){ L.weight = $('lweight').value; });
+$('lsize').oninput   = withSel(function(L){ L.size = +$('lsize').value; $('lsizev').textContent = Math.round(L.size*1000)/10; });
+$('llh').oninput     = withSel(function(L){ L.lineHeight = +$('llh').value; $('llhv').textContent = L.lineHeight.toFixed(2); });
+$('ltr').oninput     = withSel(function(L){ L.tracking = +$('ltr').value; $('ltrv').textContent = Math.round(L.tracking*100); });
+$('lmw').oninput     = withSel(function(L){ L.maxWidth = +$('lmw').value; $('lmwv').textContent = pct(L.maxWidth); });
+$('lcolor').oninput  = withSel(function(L){ L.color = $('lcolor').value; });
+$('lshadow').oninput = withSel(function(L){ L.shadow = +$('lshadow').value; $('lshadowv').textContent = pct(L.shadow); });
+$('lstroke').oninput = withSel(function(L){ L.stroke = +$('lstroke').value; });
+$('lstrokec').oninput= withSel(function(L){ L.strokeColor = $('lstrokec').value; });
+$('lupper').onclick  = withSel(function(L){ L.upper = !L.upper; syncEditor(); });
+$('lbox').onclick    = withSel(function(L){ L.box = !L.box; syncEditor(); });
+$('lboxc').oninput   = withSel(function(L){ L.boxColor = $('lboxc').value; L.box = true; syncEditor(); });
+$('lboxo').oninput   = withSel(function(L){ L.boxOpacity = +$('lboxo').value; });
+
+Array.prototype.forEach.call($('align').children, function(b){
+  b.onclick = withSel(function(L){
+    var old = L.align, W = 1;
+    // зберігаємо візуальне положення при зміні вирівнювання
+    if (L._box && previewW){
+      var leftFrac = L._box.x / cv.width;
+      var wFrac = L._box.w / cv.width;
+      L.align = b.dataset.al;
+      L.x = L.align === 'left' ? leftFrac : (L.align === 'right' ? leftFrac + wFrac : leftFrac + wFrac/2);
+    } else {
+      L.align = b.dataset.al;
+    }
+    syncEditor();
+  });
+});
+
+$('ldel').onclick = withSel(function(L){
+  state.layers = state.layers.filter(function(o){ return o.id !== L.id; });
+  state.sel = state.layers.length ? state.layers[0].id : null;
+  syncLayers(); syncEditor();
+});
+$('ldup').onclick = withSel(function(L){
+  var c = JSON.parse(JSON.stringify(L));
+  c.id = 'L' + (++uid); c.y = clamp(L.y + 0.06, 0, 0.95); delete c._box;
+  state.layers.push(c); state.sel = c.id;
+  syncLayers(); syncEditor();
+});
+function moveLayer(dir){
+  return withSel(function(L){
+    var i = state.layers.indexOf(L), j = i + dir;
+    if (j < 0 || j >= state.layers.length) return;
+    state.layers.splice(i,1); state.layers.splice(j,0,L);
+    syncLayers();
+  });
+}
+$('lup').onclick = moveLayer(-1);
+$('ldn').onclick = moveLayer(1);
+
+Array.prototype.forEach.call(document.querySelectorAll('[data-lay]'), function(b){
+  b.onclick = function(){ layout(b.dataset.lay); render(); };
+});
+
+$('addown').onclick = function(){
+  var S = styleById(state.styleId);
+  var L;
+  if (state.textIdx >= 0){
+    // зараз стоїть готовий текст — прибираємо його, лишається порожній шаблон
+    state.layers = [];
+    state.textIdx = -1;
+    L = makeLayer('', {});
+    applyProps(L, S.title);
+  } else {
+    // вже свій текст — просто додаємо ще один рядок
+    L = makeLayer('', {});
+    applyProps(L, state.layers.length > 1 ? (S.body || S.title) : S.title);
+  }
+  state.sel = L.id;
+  layout(S.pos || 'bottom');
+  syncLayers(); syncEditor(); syncTexts(); render();
+  goTab('style');
+  $('ltext').focus();
+};
+
+$('emo').onclick = function(){
+  state.emoji = !state.emoji;
+  $('emo').className = 'sm' + (state.emoji ? ' on' : '');
+  $('emo').textContent = state.emoji ? '😊 з емодзі' : '😶 без емодзі';
+  if (state.textIdx >= 0) addPreset(state.textIdx);
+};
+
+$('prev').onclick = function(){
+  if (!texts.length) return;
+  addPreset((state.textIdx - 1 + texts.length) % texts.length);
+};
+$('next').onclick = function(){
+  if (!texts.length) return;
+  addPreset((state.textIdx + 1) % texts.length);
+};
+
+$('zoom').oninput = function(){
+  state.img.scale = +this.value;
+  $('zoomv').textContent = pct(state.img.scale);
+  render();
+};
+$('fill').onclick = function(){
+  state.img.scale = 1; state.img.ox = 0; state.img.oy = 0;
+  $('zoom').value = 1; $('zoomv').textContent = '100%'; render();
+};
+$('fit').onclick = function(){
+  var img = currentImage();
+  if (!img || !img.naturalWidth) return;
+  var W = state.ratio.w, H = state.ratio.h;
+  var cover = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+  var contain = Math.min(W / img.naturalWidth, H / img.naturalHeight);
+  state.img.scale = clamp(contain / cover, 0.3, 3);
+  state.img.ox = 0; state.img.oy = 0;
+  $('zoom').value = state.img.scale;
+  $('zoomv').textContent = pct(state.img.scale);
+  render();
+};
+$('creset').onclick = $('fill').onclick;
+$('bg').oninput = function(){ state.bg = this.value; render(); };
+$('scrimv').oninput = function(){
+  state.scrim.strength = +this.value;
+  $('scrimvv').textContent = pct(state.scrim.strength); render();
+};
+$('scrimc').oninput = function(){ state.scrim.color = this.value; render(); };
+$('quality').onchange = render;
+
+/* ——— завантаження своїх фото ——— */
+$('up').onchange = function(e){
+  var files = Array.prototype.slice.call(e.target.files || []);
+  var added = null;
+  files.forEach(function(f, k){
+    var fr = new FileReader();
+    fr.onload = function(){
+      var id = 'u' + (++uid);
+      var p = {id:id, name:f.name, src:fr.result, thumb:fr.result};
+      photos.push(p);
+      var im = new Image(); im.onload = render; im.src = fr.result;
+      images[id] = im;
+      buildGallery();
+      if (k === 0) selectPhoto(id);
+    };
+    fr.readAsDataURL(f);
+  });
+  e.target.value = '';
+};
+
+/* ——— вкладки на телефоні ——— */
+var tabBtns = document.querySelectorAll('#tabbar button');
+Array.prototype.forEach.call(tabBtns, function(b){
+  b.onclick = function(){
+    document.body.setAttribute('data-tab', b.dataset.t);
+    Array.prototype.forEach.call(tabBtns, function(o){ o.className = (o === b ? 'on' : ''); });
+    render();
+  };
+});
+document.body.setAttribute('data-tab', 'photo');
+
+function goTab(t){
+  for (var i = 0; i < tabBtns.length; i++)
+    if (tabBtns[i].dataset.t === t){ tabBtns[i].click(); return; }
+}
+
+/* ——— перетягування та щипок на полотні ——— */
+var drag = null;
+var pts = {};        // активні дотики
+var pinch = null;    // {d0, s0}
+
+function dist(){
+  var k = Object.keys(pts);
+  if (k.length < 2) return 0;
+  var a = pts[k[0]], b = pts[k[1]];
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+cv.addEventListener('pointerdown', function(e){
+  pts[e.pointerId] = {x:e.clientX, y:e.clientY};
+  if (Object.keys(pts).length === 2){
+    pinch = {d0: dist(), s0: state.img.scale};
+    drag = null;
+    return;
+  }
+
+  var r = cv.getBoundingClientRect();
+  var px = (e.clientX - r.left) / r.width  * cv.width;
+  var py = (e.clientY - r.top)  / r.height * cv.height;
+
+  var hit = null;
+  for (var i = state.layers.length - 1; i >= 0; i--){
+    var b = state.layers[i]._box;
+    if (!b) continue;
+    var pad = cv.width * 0.02;
+    if (px >= b.x-pad && px <= b.x+b.w+pad && py >= b.y-pad && py <= b.y+b.h+pad){
+      hit = state.layers[i]; break;
+    }
+  }
+  if (hit){
+    state.sel = hit.id;
+    drag = {kind:'layer', L:hit, sx:px, sy:py, x0:hit.x, y0:hit.y};
+    syncLayers(); syncEditor();
+  } else {
+    drag = {kind:'img', sx:px, sy:py, x0:state.img.ox, y0:state.img.oy};
+  }
+  cv.setPointerCapture(e.pointerId);
+  cv.classList.add('grabbing');
+  render();
+});
+
+cv.addEventListener('pointermove', function(e){
+  if (pts[e.pointerId]){ pts[e.pointerId].x = e.clientX; pts[e.pointerId].y = e.clientY; }
+
+  if (pinch && Object.keys(pts).length >= 2){
+    var d = dist();
+    if (d > 0 && pinch.d0 > 0){
+      state.img.scale = clamp(pinch.s0 * d / pinch.d0, 0.3, 3);
+      $('zoom').value = state.img.scale;
+      $('zoomv').textContent = pct(state.img.scale);
+      render();
+    }
+    return;
+  }
+
+  if (!drag) return;
+  var r = cv.getBoundingClientRect();
+  var px = (e.clientX - r.left) / r.width  * cv.width;
+  var py = (e.clientY - r.top)  / r.height * cv.height;
+  var dx = (px - drag.sx) / cv.width;
+  var dy = (py - drag.sy) / cv.height;
+  if (drag.kind === 'layer'){
+    drag.L.x = clamp(drag.x0 + dx, -0.2, 1.2);
+    drag.L.y = clamp(drag.y0 + dy, -0.2, 1.2);
+  } else {
+    state.img.ox = drag.x0 + dx;
+    state.img.oy = drag.y0 + dy;
+  }
+  render();
+});
+
+function endDrag(e){
+  if (e && e.pointerId != null) delete pts[e.pointerId];
+  if (Object.keys(pts).length < 2) pinch = null;
+  drag = null;
+  cv.classList.remove('grabbing');
+}
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+
+cv.addEventListener('wheel', function(e){
+  e.preventDefault();
+  state.img.scale = clamp(state.img.scale * (1 - e.deltaY * 0.0016), 0.3, 3);
+  $('zoom').value = state.img.scale;
+  $('zoomv').textContent = pct(state.img.scale);
+  render();
+}, {passive:false});
+
+document.addEventListener('keydown', function(e){
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+  var L = state.sel ? byId(state.sel) : null;
+  if (!L) return;
+  var step = e.shiftKey ? 0.02 : 0.004;
+  if (e.key === 'ArrowLeft')      L.x -= step;
+  else if (e.key === 'ArrowRight')L.x += step;
+  else if (e.key === 'ArrowUp')   L.y -= step;
+  else if (e.key === 'ArrowDown') L.y += step;
+  else if (e.key === 'Backspace' || e.key === 'Delete'){
+    state.layers = state.layers.filter(function(o){ return o.id !== L.id; });
+    state.sel = state.layers.length ? state.layers[0].id : null;
+    syncLayers(); syncEditor();
+  } else return;
+  e.preventDefault();
+  render();
+});
+
+/* ——— експорт ——— */
+
+function outName(){
+  return 'post-' + state.ratio.id.replace(/[:.]/g,'-')
+       + (state.textIdx >= 0 ? '-' + (state.textIdx+1) : '') + '.png';
+}
+
+function saveBlob(blob, name){
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+}
+
+function dataURLtoBlob(u){
+  var parts = u.split(',');
+  var mime = parts[0].match(/:(.*?);/)[1];
+  var bin = atob(parts[1]);
+  var n = bin.length, arr = new Uint8Array(n);
+  while (n--) arr[n] = bin.charCodeAt(n);
+  return new Blob([arr], {type:mime});
+}
+
+$('dl').onclick = function(){
+  var q = parseInt($('quality').value, 10);
+  var W = q, H = Math.round(q * state.ratio.h / state.ratio.w);
+  var o = document.createElement('canvas');
+  o.width = W; o.height = H;
+  paint(o.getContext('2d'), W, H, false);
+
+  var name = outName();
+  var mobile = window.matchMedia('(max-width:900px)').matches;
+
+  /* На телефоні відкриваємо системне «Поділитися»: звідти можна зберегти
+     в Фото або одразу відправити в Instagram. Робимо це синхронно,
+     інакше Safari втрачає дозвіл від натискання. */
+  if (mobile && navigator.canShare && typeof File !== 'undefined'){
+    try {
+      var blob = dataURLtoBlob(o.toDataURL('image/png'));
+      var file = new File([blob], name, {type:'image/png'});
+      if (navigator.canShare({files:[file]})){
+        navigator.share({files:[file]})['catch'](function(err){
+          if (!err || err.name !== 'AbortError') saveBlob(blob, name);
+        });
+        render();
+        return;
+      }
+      saveBlob(blob, name);
+      render();
+      return;
+    } catch (err){ /* нижче — звичайне завантаження */ }
+  }
+
+  render();  // відновлюємо _box для прев'ю
+  o.toBlob(function(blob){ saveBlob(blob, name); }, 'image/png');
+};
+
+window.addEventListener('resize', render);
+window.addEventListener('orientationchange', function(){ setTimeout(render, 250); });
+if (window.visualViewport) window.visualViewport.addEventListener('resize', render);
+
+/* ═══════════ старт ═══════════ */
+
+buildGallery();
+buildRatios();
+buildScrims();
+buildStyles();
+syncTexts();
+syncLayers();
+syncEditor();
+$('scrimvv').textContent = pct(state.scrim.strength);
+if (photos.length) selectPhoto(photos[0].id);
+if (texts.length) addPreset(0);
+render();
+
+})();
+</script>
+</body>
+</html>
