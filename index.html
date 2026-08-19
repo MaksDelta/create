@@ -115,6 +115,7 @@
 
   /* ——— сцена ——— */
   .stage{
+    position:relative;
     flex:1; min-width:0; display:flex; flex-direction:column; align-items:center;
     justify-content:center; gap:12px; padding:18px; background:
       repeating-conic-gradient(#191920 0% 25%, #1e1e26 0% 50%) 50%/22px 22px;
@@ -125,7 +126,18 @@
   }
   #cv.grabbing{cursor:grabbing}
   .stagebar{display:flex; gap:8px; align-items:center; font-size:12px; color:var(--dim)}
-  .empty{color:var(--dim); font-size:14px; text-align:center; max-width:280px}
+  .empty{
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    color:var(--dim); font-size:13px; line-height:1.6; text-align:center;
+    max-width:260px; pointer-events:none;
+  }
+  .empty b{display:block; color:var(--txt); font-size:14px; margin-bottom:4px}
+  .plus{
+    display:block; margin:0 auto 12px; width:74px; height:74px; padding:0;
+    border-radius:20px; border:1.6px dashed #4a4a56; background:rgba(255,255,255,.05);
+    color:var(--dim); font-size:34px; line-height:1; pointer-events:auto; cursor:pointer;
+  }
+  .plus:hover{border-color:var(--acc); color:var(--acc); background:rgba(232,176,75,.10)}
   ::-webkit-scrollbar{width:10px;height:10px}
   ::-webkit-scrollbar-thumb{background:#3a3a44; border-radius:6px; border:2px solid var(--panel)}
   ::-webkit-scrollbar-track{background:transparent}
@@ -284,6 +296,12 @@
   <!-- СЦЕНА -->
   <div class="stage">
     <canvas id="cv"></canvas>
+    <div class="empty" id="hello">
+      <button class="plus" id="helloAdd" title="Додати своє фото">+</button>
+      <b>Танюшка — сонечко моє кохане ❤️</b>
+      <span class="full">Тицьни + або обери знімок у галереї.</span>
+      <span class="short">Тицьни + або відкрий вкладку «Фото».</span>
+    </div>
     <div class="stagebar">
       <button class="sm ghost" id="prev"><span class="full">← попередній текст</span><span class="short">←</span></button>
       <span id="counter">—</span>
@@ -2268,6 +2286,8 @@ function byId(id){
 var previewW = 0, previewH = 0;
 
 function render(){
+  var hello = $('hello');
+  if (hello) hello.style.display = state.photoId ? 'none' : 'block';
   var stage = document.querySelector('.stage');
   var bar = document.querySelector('.stagebar');
   var cs = getComputedStyle(stage);
@@ -2661,6 +2681,7 @@ function autopick(){
   if (!state.layers.length) return;
 
   var f = sampleFrame();
+  if (!f) return;                    // фото ще немає — аналізувати нічого
   var tLen = state.layers[0].text.replace(/\s+/g,' ').length;
   var bLen = state.layers.length > 1 ? state.layers[1].text.length : 0;
 
@@ -3240,6 +3261,8 @@ function moveSticker(dir){
 $('skup').onclick = moveSticker(1);    // вище в списку = ближче до глядача
 $('skdn').onclick = moveSticker(-1);
 
+$('helloAdd').onclick = function(){ $('up').click(); };
+
 $('stkPadOn').onclick = function(){
   padOn = !padOn;
   $('stkPadOn').className = 'sm' + (padOn ? ' on' : '');
@@ -3764,9 +3787,7 @@ syncLayers();
 syncEditor();
 syncStickers();
 $('scrimvv').textContent = pct(state.scrim.strength);
-if (photos.length) selectPhoto(photos[0].id);
-if (texts.length) addPreset(0);
-render();
+render();          // порожній кадр: фото й текст додає користувач
 
 })();
 </script>
