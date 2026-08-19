@@ -27,7 +27,7 @@
 
   /* ——— бічна панель ——— */
   aside{
-    width:340px; flex:0 0 340px; border-right:1px solid var(--line);
+    width:380px; flex:0 0 380px; border-right:1px solid var(--line);
     background:var(--panel); overflow-y:auto; overscroll-behavior:contain;
   }
   aside.right{border-right:none; border-left:1px solid var(--line); width:440px; flex-basis:440px}
@@ -185,9 +185,9 @@
     }
     body[data-tab="photo"]  aside.left,
     body[data-tab="format"] aside.left,
-    body[data-tab="text"]   aside.right,
-    body[data-tab="stick"]  aside.right,
-    body[data-tab="style"]  aside.right{display:block}
+    body[data-tab="text"]   aside.left,
+    body[data-tab="style"]  aside.left,
+    body[data-tab="stick"]  aside.right{display:block}
 
     section{display:none}
     body[data-tab="photo"]  section[data-tab="photo"],
@@ -233,29 +233,29 @@
 
   <!-- ЛІВА ПАНЕЛЬ -->
   <aside class="left">
-    <section data-tab="photo">
-      <h2>1. Фото</h2>
+    <section data-tab="photo" id="photoSec" style="display:none">
+      <h2>Ваші фото</h2>
       <div class="pad">
         <div class="gal" id="gal"></div>
         <div class="row"><span class="hint" id="pdesc"></span></div>
-        <div class="row" style="margin-top:10px">
-          <label class="btn sm" style="flex:1;text-align:center">
-            + Своє фото<input type="file" id="up" accept="image/*" multiple hidden>
-          </label>
-        </div>
       </div>
     </section>
 
     <section data-tab="format">
-      <h2>2. Формат</h2>
+      <h2>Формат</h2>
       <div class="pad">
         <div class="chips" id="ratios"></div>
       </div>
     </section>
 
     <section data-tab="photo">
-      <h2>3. Кадрування</h2>
+      <h2>Фото і кадрування</h2>
       <div class="pad">
+        <div class="row" style="margin-bottom:10px">
+          <label class="btn sm" style="flex:1;text-align:center">
+            + Додати фото<input type="file" id="up" accept="image/*" multiple hidden>
+          </label>
+        </div>
         <div class="row">
           <label class="lbl">Масштаб</label>
           <input type="range" id="zoom" min="0.3" max="3" step="0.01" value="1">
@@ -276,7 +276,7 @@
     </section>
 
     <section data-tab="format">
-      <h2>4. Затемнення</h2>
+      <h2>Затемнення</h2>
       <div class="pad">
         <div class="chips" id="scrims"></div>
         <div class="row">
@@ -291,6 +291,122 @@
         </div>
       </div>
     </section>
+      <section data-tab="text">
+      <h2>Свій текст — авто</h2>
+      <div class="pad">
+        <textarea id="autotext" placeholder="Перший рядок — заголовок.&#10;Далі — підпис."></textarea>
+        <div class="row" style="margin-top:9px">
+          <button class="primary" id="autogo" style="flex:1">✨ Підібрати вигляд</button>
+          <button class="sm" id="addown">+ свій текст</button>
+        </div>
+        <div class="row"><span class="hint">Підбере стиль, колір і розташування під вибране фото. Фото лишається ваше — міняється тільки текст.</span></div>
+      </div>
+    </section>
+    <section data-tab="text" id="textsSec" style="display:none">
+      <h2>Готові тексти</h2>
+      <div class="pad">
+        <div class="tlist" id="tlist"></div>
+        <div class="row" id="tmatch" style="flex-wrap:wrap; row-gap:6px"></div>
+      </div>
+    </section>
+    <section data-tab="style">
+      <h2>Стиль тексту</h2>
+      <div class="pad">
+        <div class="chips" id="styles"></div>
+        <div class="row"><span class="hint">Стиль міняє шрифт, колір, затемнення й розташування одразу.</span></div>
+      </div>
+    </section>
+    <section data-tab="style">
+      <h2>Розкладка</h2>
+      <div class="pad">
+        <div class="chips">
+          <button class="sm" data-lay="top">Вгорі</button>
+          <button class="sm" data-lay="center">По центру</button>
+          <button class="sm" data-lay="bottom">Внизу</button>
+        </div>
+      </div>
+    </section>
+    <section data-tab="style">
+      <h2>Шари тексту</h2>
+      <div class="pad">
+        <div class="layers" id="layers"></div>
+
+        <div id="editor" style="display:none; margin-top:12px">
+          <textarea id="ltext" placeholder="Текст…"></textarea>
+          <div class="row" style="margin-top:9px">
+            <label class="lbl">Шрифт</label>
+            <select id="lfont"></select>
+          </div>
+          <div class="row">
+            <label class="lbl">Товщина</label>
+            <select id="lweight">
+              <option value="300">Тонкий</option>
+              <option value="400">Звичайний</option>
+              <option value="600">Напівжирний</option>
+              <option value="700" selected>Жирний</option>
+              <option value="900">Дуже жирний</option>
+            </select>
+          </div>
+          <div class="row">
+            <label class="lbl">Розмір</label>
+            <input type="range" id="lsize" min="0.018" max="0.18" step="0.001">
+            <span class="val" id="lsizev"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Міжряддя</label>
+            <input type="range" id="llh" min="0.85" max="2" step="0.01">
+            <span class="val" id="llhv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Розрядка</label>
+            <input type="range" id="ltr" min="-0.03" max="0.3" step="0.005">
+            <span class="val" id="ltrv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Ширина</label>
+            <input type="range" id="lmw" min="0.3" max="0.96" step="0.01">
+            <span class="val" id="lmwv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Колір</label>
+            <input type="color" id="lcolor">
+            <div class="chips" id="swatches"></div>
+          </div>
+          <div class="row">
+            <label class="lbl">Вирівняти</label>
+            <div class="chips" id="align">
+              <button class="sm" data-al="left">◧</button>
+              <button class="sm" data-al="center">◎</button>
+              <button class="sm" data-al="right">◨</button>
+            </div>
+            <button class="sm" id="lupper">ВЕЛИКІ</button>
+          </div>
+          <div class="row">
+            <label class="lbl">Тінь</label>
+            <input type="range" id="lshadow" min="0" max="1" step="0.02">
+            <span class="val" id="lshadowv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Обведення</label>
+            <input type="range" id="lstroke" min="0" max="0.2" step="0.005">
+            <input type="color" id="lstrokec" value="#000000">
+          </div>
+          <div class="row">
+            <label class="lbl">Підкладка</label>
+            <button class="sm" id="lbox">вимк.</button>
+            <input type="color" id="lboxc" value="#000000">
+            <input type="range" id="lboxo" min="0" max="1" step="0.02" style="max-width:80px">
+          </div>
+          <div class="row">
+            <button class="sm" id="ldup">Дублювати</button>
+            <button class="sm" id="lup">↑</button>
+            <button class="sm" id="ldn">↓</button>
+            <button class="sm" id="ldel" style="margin-left:auto">Видалити</button>
+          </div>
+          <div class="row"><span class="hint">Тягніть текст на фото мишкою. Стрілки на клавіатурі — точне зміщення.</span></div>
+        </div>
+      </div>
+    </section>
   </aside>
 
   <!-- СЦЕНА -->
@@ -299,8 +415,8 @@
     <div class="empty" id="hello">
       <button class="plus" id="helloAdd" title="Додати своє фото">+</button>
       <b>Танюшка — сонечко моє кохане ❤️</b>
-      <span class="full">Тицьни + або обери знімок у галереї.</span>
-      <span class="short">Тицьни + або відкрий вкладку «Фото».</span>
+      <span class="full">Тицьни + і обери своє фото.</span>
+      <span class="short">Тицьни + і обери своє фото.</span>
     </div>
     <div class="stagebar">
       <button class="sm ghost" id="prev"><span class="full">← попередній текст</span><span class="short">←</span></button>
@@ -321,30 +437,8 @@
 
   <!-- ПРАВА ПАНЕЛЬ -->
   <aside class="right">
-    <section data-tab="text">
-      <h2>5. Свій текст — авто</h2>
-      <div class="pad">
-        <textarea id="autotext" placeholder="Перший рядок — заголовок.&#10;Далі — підпис."></textarea>
-        <div class="row" style="margin-top:9px">
-          <button class="primary" id="autogo" style="flex:1">✨ Підібрати вигляд</button>
-        </div>
-        <div class="row"><span class="hint">Підбере стиль, колір і розташування під вибране фото. Фото лишається ваше — міняється тільки текст.</span></div>
-      </div>
-    </section>
-
-    <section data-tab="text">
-      <h2>6. Готові тексти</h2>
-      <div class="pad">
-        <div class="row" style="margin-bottom:9px">
-          <button class="sm" id="addown">+ свій текст</button>
-        </div>
-        <div class="tlist" id="tlist"></div>
-        <div class="row" id="tmatch" style="flex-wrap:wrap; row-gap:6px"></div>
-      </div>
-    </section>
-
     <section data-tab="stick">
-      <h2>7. Наклейки</h2>
+      <h2>Наклейки</h2>
       <div class="pad">
         <div class="row"><span class="hint">Клік — наклейка стає на фото. Далі тягніть її пальцем чи мишкою: нижній кутик — розмір, верхній — поворот.</span></div>
 
@@ -398,9 +492,8 @@
         <div class="row"><span class="hint">PNG з прозорим фоном — будь-яка наклейка з інтернету стане в один клік.</span></div>
       </div>
     </section>
-
     <section data-tab="stick">
-      <h2>8. Наклейки на фото</h2>
+      <h2>Наклейки на фото</h2>
       <div class="pad">
         <div class="layers" id="stkList"></div>
         <div id="noStk" class="hint" style="padding:4px 0">Поки що жодної. Оберіть зі списку вище.</div>
@@ -497,108 +590,6 @@
             <button class="sm" id="skdn">↓</button>
             <button class="sm" id="skdel" style="margin-left:auto">Видалити</button>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section data-tab="style">
-      <h2>9. Стиль тексту</h2>
-      <div class="pad">
-        <div class="chips" id="styles"></div>
-        <div class="row"><span class="hint">Стиль міняє шрифт, колір, затемнення й розташування одразу.</span></div>
-      </div>
-    </section>
-
-    <section data-tab="style">
-      <h2>10. Розкладка</h2>
-      <div class="pad">
-        <div class="chips">
-          <button class="sm" data-lay="top">Вгорі</button>
-          <button class="sm" data-lay="center">По центру</button>
-          <button class="sm" data-lay="bottom">Внизу</button>
-        </div>
-      </div>
-    </section>
-
-    <section data-tab="style">
-      <h2>11. Шари тексту</h2>
-      <div class="pad">
-        <div class="layers" id="layers"></div>
-        <div id="noLayers" class="hint" style="padding:4px 0">Оберіть текст зі списку вище.</div>
-
-        <div id="editor" style="display:none; margin-top:12px">
-          <textarea id="ltext" placeholder="Текст…"></textarea>
-          <div class="row" style="margin-top:9px">
-            <label class="lbl">Шрифт</label>
-            <select id="lfont"></select>
-          </div>
-          <div class="row">
-            <label class="lbl">Товщина</label>
-            <select id="lweight">
-              <option value="300">Тонкий</option>
-              <option value="400">Звичайний</option>
-              <option value="600">Напівжирний</option>
-              <option value="700" selected>Жирний</option>
-              <option value="900">Дуже жирний</option>
-            </select>
-          </div>
-          <div class="row">
-            <label class="lbl">Розмір</label>
-            <input type="range" id="lsize" min="0.018" max="0.18" step="0.001">
-            <span class="val" id="lsizev"></span>
-          </div>
-          <div class="row">
-            <label class="lbl">Міжряддя</label>
-            <input type="range" id="llh" min="0.85" max="2" step="0.01">
-            <span class="val" id="llhv"></span>
-          </div>
-          <div class="row">
-            <label class="lbl">Розрядка</label>
-            <input type="range" id="ltr" min="-0.03" max="0.3" step="0.005">
-            <span class="val" id="ltrv"></span>
-          </div>
-          <div class="row">
-            <label class="lbl">Ширина</label>
-            <input type="range" id="lmw" min="0.3" max="0.96" step="0.01">
-            <span class="val" id="lmwv"></span>
-          </div>
-          <div class="row">
-            <label class="lbl">Колір</label>
-            <input type="color" id="lcolor">
-            <div class="chips" id="swatches"></div>
-          </div>
-          <div class="row">
-            <label class="lbl">Вирівняти</label>
-            <div class="chips" id="align">
-              <button class="sm" data-al="left">◧</button>
-              <button class="sm" data-al="center">◎</button>
-              <button class="sm" data-al="right">◨</button>
-            </div>
-            <button class="sm" id="lupper">ВЕЛИКІ</button>
-          </div>
-          <div class="row">
-            <label class="lbl">Тінь</label>
-            <input type="range" id="lshadow" min="0" max="1" step="0.02">
-            <span class="val" id="lshadowv"></span>
-          </div>
-          <div class="row">
-            <label class="lbl">Обведення</label>
-            <input type="range" id="lstroke" min="0" max="0.2" step="0.005">
-            <input type="color" id="lstrokec" value="#000000">
-          </div>
-          <div class="row">
-            <label class="lbl">Підкладка</label>
-            <button class="sm" id="lbox">вимк.</button>
-            <input type="color" id="lboxc" value="#000000">
-            <input type="range" id="lboxo" min="0" max="1" step="0.02" style="max-width:80px">
-          </div>
-          <div class="row">
-            <button class="sm" id="ldup">Дублювати</button>
-            <button class="sm" id="lup">↑</button>
-            <button class="sm" id="ldn">↓</button>
-            <button class="sm" id="ldel" style="margin-left:auto">Видалити</button>
-          </div>
-          <div class="row"><span class="hint">Тягніть текст на фото мишкою. Стрілки на клавіатурі — точне зміщення.</span></div>
         </div>
       </div>
     </section>
@@ -2234,6 +2225,70 @@ function drawScrim(c, W, H){
   }
 }
 
+/* Порожній кадр не має бути чорною дірою: м'які кольорові плями, що поволі
+   пливуть, і кілька хвильок поверх них. Малюється лише поки фото ще немає. */
+var idleT = 0, idleAnim = null;
+var ripples = [];                  // кола від дотику: {x, y, t} у частках кадру
+
+function addRipple(fx, fy){
+  ripples.push({x:fx, y:fy, t:idleT});
+  if (ripples.length > 14) ripples.shift();
+  startIdle();
+}
+
+function drawIdleBg(c, W, H){
+  var t = idleT, R = Math.max(W, H);
+  var drift = t * 0.35;                            // колір повзе ~1 коло за 17 хв
+  var blobs = [
+    [0.30 + Math.sin(t*0.33)*0.10, 0.34 + Math.cos(t*0.26)*0.09, 0.62,  42, 0.62, 0.60, 0.20],
+    [0.72 + Math.cos(t*0.29)*0.10, 0.64 + Math.sin(t*0.22)*0.10, 0.66, 335, 0.58, 0.66, 0.16],
+    [0.55 + Math.sin(t*0.18 + 1.5)*0.13, 0.18 + Math.cos(t*0.31)*0.08, 0.50, 210, 0.50, 0.67, 0.12],
+    [0.18 + Math.cos(t*0.24 + 2.1)*0.09, 0.80 + Math.sin(t*0.2)*0.07, 0.48, 155, 0.30, 0.73, 0.11],
+  ];
+  for (var i = 0; i < blobs.length; i++){
+    var b = blobs[i];
+    var col = hsl2hex(((b[3] + drift) % 360 + 360) % 360, b[4], b[5]);
+    var g = c.createRadialGradient(b[0]*W, b[1]*H, 0, b[0]*W, b[1]*H, b[2]*R);
+    g.addColorStop(0, hexA(col, b[6]));
+    g.addColorStop(1, hexA(col, 0));
+    c.fillStyle = g;
+    c.fillRect(0, 0, W, H);
+  }
+  c.save();                                        // хвильки
+  c.lineWidth = Math.max(1, W*0.0022);
+  for (var k = 0; k < 4; k++){
+    var base = H * (0.30 + k*0.16), amp = H * (0.035 + k*0.012);
+    c.strokeStyle = 'rgba(255,255,255,' + (0.07 - k*0.012).toFixed(3) + ')';
+    c.beginPath();
+    for (var x = 0; x <= W; x += Math.max(2, W/90)){
+      var y = base + Math.sin(x/W * (2.2 + k*0.6) * Math.PI + t*(0.5 + k*0.18)) * amp
+                   + Math.sin(x/W * 5.5 * Math.PI - t*0.32) * amp*0.3;
+      if (x === 0) c.moveTo(x, y); else c.lineTo(x, y);
+    }
+    c.stroke();
+  }
+  c.restore();
+
+  if (ripples.length){                             // кола від дотику
+    c.save();
+    c.lineWidth = Math.max(1, W*0.0028);
+    var LIFE = 7.0;                                // розходиться повільно
+    for (var j = 0; j < ripples.length; j++){
+      var rp = ripples[j], age = t - rp.t;
+      if (age < 0 || age > LIFE) continue;
+      var kk = age / LIFE;
+      var rad = R * 0.9 * (1 - Math.pow(1 - kk, 2.2));
+      if (rad <= 0) continue;
+      c.strokeStyle = 'rgba(255,255,255,' + ((1 - kk) * (1 - kk) * 0.42).toFixed(3) + ')';
+      c.beginPath();
+      c.arc(rp.x*W, rp.y*H, rad, 0, Math.PI*2);
+      c.stroke();
+    }
+    c.restore();
+    ripples = ripples.filter(function(r){ return t - r.t <= 7.0; });
+  }
+}
+
 /* Головна функція: малює кадр у контекст будь-якого розміру. */
 function paint(c, W, H, showSel){
   c.clearRect(0,0,W,H);
@@ -2241,6 +2296,7 @@ function paint(c, W, H, showSel){
   c.fillRect(0,0,W,H);
 
   var img = currentImage();
+  if (!img || !img.complete || !img.naturalWidth) drawIdleBg(c, W, H);
   if (img && img.complete && img.naturalWidth){
     var base = Math.max(W / img.naturalWidth, H / img.naturalHeight);
     var s = base * state.img.scale;
@@ -2285,6 +2341,18 @@ function byId(id){
 
 var previewW = 0, previewH = 0;
 
+function idleLoop(){
+  if (state.photoId || document.hidden){ idleAnim = null; return; }
+  idleT += 1/60;
+  paint(ctx, cv.width, cv.height, true);
+  idleAnim = requestAnimationFrame(idleLoop);
+}
+function startIdle(){
+  if (!idleAnim && !state.photoId && !document.hidden)
+    idleAnim = requestAnimationFrame(idleLoop);
+}
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) startIdle(); });
+
 function render(){
   var hello = $('hello');
   if (hello) hello.style.display = state.photoId ? 'none' : 'block';
@@ -2307,6 +2375,7 @@ function render(){
   cv.width  = Math.round(w * dpr);
   cv.height = Math.round(h * dpr);
   paint(ctx, cv.width, cv.height, true);
+  startIdle();
 
   var q = parseInt($('quality').value, 10);
   var ow = q, oh = Math.round(q * state.ratio.h / state.ratio.w);
@@ -2783,6 +2852,7 @@ function shortDesc(p){
 
 function buildGallery(){
   var g = $('gal'); g.innerHTML = '';
+  $('photoSec').style.display = photos.length ? '' : 'none';
   photos.forEach(function(p){
     var im = new Image();
     im.src = p.thumb || p.src;
@@ -2845,9 +2915,12 @@ function syncTexts(){
     b.onclick = function(){ addPreset(i); };
     box.appendChild(b);
   });
-  $('counter').textContent = state.textIdx >= 0
-    ? (state.textIdx+1) + ' / ' + texts.length
-    : texts.length + ' текстів';
+  $('textsSec').style.display = texts.length ? '' : 'none';
+  $('prev').style.display = texts.length ? '' : 'none';
+  $('next').style.display = texts.length ? '' : 'none';
+  $('counter').textContent = !texts.length ? ''
+    : (state.textIdx >= 0 ? (state.textIdx+1) + ' / ' + texts.length
+                          : texts.length + ' текстів');
   syncMatch();
 }
 
@@ -2888,7 +2961,6 @@ function syncLayers(){
     d.onclick = function(){ state.sel = L.id; syncLayers(); syncEditor(); render(); };
     box.appendChild(d);
   });
-  $('noLayers').style.display = state.layers.length ? 'none' : 'block';
 }
 
 function syncEditor(){
@@ -3530,6 +3602,8 @@ cv.addEventListener('pointerdown', function(e){
   var r = cv.getBoundingClientRect();
   var px = (e.clientX - r.left) / r.width  * cv.width;
   var py = (e.clientY - r.top)  / r.height * cv.height;
+
+  if (!state.photoId) addRipple(px / cv.width, py / cv.height);
 
   /* 1) ручки обраної наклейки */
   var K = selSticker();
