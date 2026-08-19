@@ -30,7 +30,7 @@
     width:340px; flex:0 0 340px; border-right:1px solid var(--line);
     background:var(--panel); overflow-y:auto; overscroll-behavior:contain;
   }
-  aside.right{border-right:none; border-left:1px solid var(--line); width:330px; flex-basis:330px}
+  aside.right{border-right:none; border-left:1px solid var(--line); width:440px; flex-basis:440px}
   section{border-bottom:1px solid var(--line)}
   section > h2{
     margin:0; padding:12px 14px 10px; font-size:11px; font-weight:700;
@@ -99,6 +99,20 @@
   .lay .x{opacity:.5; padding:2px 5px; border:none; background:none; font-size:14px; line-height:1}
   .lay .x:hover{opacity:1; color:#ff7676; background:none}
 
+  /* ——— наклейки ——— */
+  .sub{
+    font-size:11px; color:var(--dim); letter-spacing:.06em; text-transform:uppercase;
+    margin:13px 0 6px; font-weight:600;
+  }
+  .row + .sub{margin-top:14px}
+  .stkgrid{display:grid; grid-template-columns:repeat(7,1fr); gap:5px}
+  .stkgrid button{
+    padding:0; height:40px; display:flex; align-items:center; justify-content:center;
+    font-size:21px; line-height:1;
+  }
+  .stkgrid canvas{width:24px; height:24px; display:block}
+  .stkgrid button.wide canvas{width:32px; height:24px}
+
   /* ——— сцена ——— */
   .stage{
     flex:1; min-width:0; display:flex; flex-direction:column; align-items:center;
@@ -143,11 +157,14 @@
 
     /* панель вкладок */
     .tabbar{
-      order:2; display:flex; flex:0 0 auto; gap:6px; padding:8px 10px;
+      order:2; display:flex; flex:0 0 auto; gap:4px; padding:8px 6px;
       background:var(--panel); border-top:1px solid var(--line);
       border-bottom:1px solid var(--line);
     }
-    .tabbar button{flex:1; padding:10px 4px; font-size:12.5px}
+    .tabbar button{
+      flex:1 1 0; min-width:0; padding:10px 2px; font-size:12px;
+      overflow:hidden; text-overflow:ellipsis;
+    }
 
     /* решта — одна прокрутна зона */
     aside, aside.right{
@@ -157,12 +174,14 @@
     body[data-tab="photo"]  aside.left,
     body[data-tab="format"] aside.left,
     body[data-tab="text"]   aside.right,
+    body[data-tab="stick"]  aside.right,
     body[data-tab="style"]  aside.right{display:block}
 
     section{display:none}
     body[data-tab="photo"]  section[data-tab="photo"],
     body[data-tab="format"] section[data-tab="format"],
     body[data-tab="text"]   section[data-tab="text"],
+    body[data-tab="stick"]  section[data-tab="stick"],
     body[data-tab="style"]  section[data-tab="style"]{display:block}
 
     /* більші зони натискання */
@@ -179,7 +198,8 @@
   @media (max-width:430px){
     .gal{grid-template-columns:repeat(4,1fr)}
     .stagebar{font-size:11px; gap:6px}
-    .tabbar button{font-size:12px; padding:10px 2px}
+    .tabbar button{font-size:11px; padding:10px 1px}
+    .stkgrid{grid-template-columns:repeat(5,1fr)}
   }
 </style>
 </head>
@@ -277,6 +297,7 @@
     <button data-t="photo" class="on">Фото</button>
     <button data-t="format">Формат</button>
     <button data-t="text">Текст</button>
+    <button data-t="stick">Наклейки</button>
     <button data-t="style">Стиль</button>
   </nav>
 
@@ -297,7 +318,6 @@
       <h2>6. Готові тексти</h2>
       <div class="pad">
         <div class="row" style="margin-bottom:9px">
-          <button class="sm on" id="emo">😊 з емодзі</button>
           <button class="sm" id="addown">+ свій текст</button>
         </div>
         <div class="tlist" id="tlist"></div>
@@ -305,8 +325,166 @@
       </div>
     </section>
 
+    <section data-tab="stick">
+      <h2>7. Наклейки</h2>
+      <div class="pad">
+        <div class="row"><span class="hint">Клік — наклейка стає на фото. Далі тягніть її пальцем чи мишкою: нижній кутик — розмір, верхній — поворот.</span></div>
+
+        <div class="row" style="margin-top:8px">
+          <button class="sm" id="stkPadOn">+ підкладка</button>
+          <input type="color" id="stkPadColor" value="#fffdf7">
+          <select id="stkPadPat" style="width:auto">
+            <option value="none">чистий</option>
+            <option value="lines">лінійка</option>
+            <option value="grid">клітинка</option>
+          </select>
+          <button class="sm" id="stkPadCrump">зіжмакана</button>
+        </div>
+        <div class="row">
+          <label class="lbl">Розмір підкл.</label>
+          <input type="range" id="stkPadSize" min="0.05" max="0.9" step="0.02" value="0.25">
+          <span class="val" id="stkPadSizev">25%</span>
+        </div>
+
+        <div class="row"><span class="hint">Підкладка — рваний аркуш за наліпкою, її ж формою.</span></div>
+
+        <div class="sub">Папір</div>
+        <div class="row" style="margin-bottom:8px">
+          <button class="sm on" id="stkLayered">шарами</button>
+          <button class="sm" id="stkPlain">одношарові</button>
+          <span class="hint">другий шар паперу й відблиск</span>
+        </div>
+        <div class="stkgrid" id="stkPaper"></div>
+
+        <div class="sub">Вирвано з зошита</div>
+        <div class="chips" id="stkTorn"></div>
+
+        <div class="sub">Паперовий напис</div>
+        <div class="row">
+          <input type="text" id="stkWord" placeholder="? або NEW" maxlength="14">
+          <button class="sm" id="stkWordAdd">+ додати</button>
+        </div>
+        <div class="chips" style="margin-top:7px" id="stkWords"></div>
+
+        <div class="sub">Колір паперу</div>
+        <div class="chips" id="stkColors"></div>
+
+        <div class="sub">Прості фігури</div>
+        <div class="stkgrid" id="stkShapes"></div>
+
+        <div class="row" style="margin-top:12px">
+          <label class="btn sm" style="flex:1;text-align:center">
+            + своя наклейка (PNG)<input type="file" id="stkUp" accept="image/*" multiple hidden>
+          </label>
+        </div>
+        <div class="row"><span class="hint">PNG з прозорим фоном — будь-яка наклейка з інтернету стане в один клік.</span></div>
+      </div>
+    </section>
+
+    <section data-tab="stick">
+      <h2>8. Наклейки на фото</h2>
+      <div class="pad">
+        <div class="layers" id="stkList"></div>
+        <div id="noStk" class="hint" style="padding:4px 0">Поки що жодної. Оберіть зі списку вище.</div>
+
+        <div id="stkEditor" style="display:none; margin-top:12px">
+          <div class="row">
+            <label class="lbl">Розмір</label>
+            <input type="range" id="sksize" min="0.03" max="1.2" step="0.005">
+            <span class="val" id="sksizev"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Поворот</label>
+            <input type="range" id="skrot" min="-180" max="180" step="1">
+            <span class="val" id="skrotv"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Прозорість</label>
+            <input type="range" id="skopa" min="0.05" max="1" step="0.01">
+            <span class="val" id="skopav"></span>
+          </div>
+          <div class="row">
+            <label class="lbl">Тінь</label>
+            <input type="range" id="skshadow" min="0" max="1" step="0.02">
+            <span class="val" id="skshadowv"></span>
+          </div>
+          <div class="row" id="skfillrow">
+            <label class="lbl">Заливка</label>
+            <div class="chips" id="skfill">
+              <button class="sm" data-f="flat">рівна</button>
+              <button class="sm" data-f="pencil">олівець</button>
+              <button class="sm" data-f="marker">фломастер</button>
+            </div>
+            <button class="sm" id="sklayer">шарами</button>
+          </div>
+          <div class="row" id="skpadrow">
+            <label class="lbl">Підкладка</label>
+            <div class="chips" id="skpadshape">
+              <button class="sm" data-s="off">нема</button>
+              <button class="sm" data-s="same">як фігура</button>
+              <button class="sm" data-s="circle">кружок</button>
+              <button class="sm" data-s="blob">клапоть</button>
+              <button class="sm" data-s="note">аркуш</button>
+              <button class="sm" data-s="cloud">хмарка</button>
+              <button class="sm" data-s="star">зірка</button>
+            </div>
+          </div>
+          <div class="row" id="skpadpatrow">
+            <label class="lbl">Її папір</label>
+            <div class="chips" id="skpadpat">
+              <button class="sm" data-pp="none">чистий</button>
+              <button class="sm" data-pp="lines">лінійка</button>
+              <button class="sm" data-pp="grid">клітинка</button>
+            </div>
+            <button class="sm" id="skpadcrump">зіжмакана</button>
+          </div>
+          <div class="row" id="skpadsizerow">
+            <label class="lbl">Її розмір</label>
+            <input type="range" id="skpad" min="0.04" max="0.7" step="0.02">
+            <input type="color" id="skpadc" value="#fffdf7">
+          </div>
+          <div class="row" id="skwidrow">
+            <label class="lbl">Ширина</label>
+            <input type="range" id="skwid" min="0.3" max="3" step="0.02">
+            <span class="val" id="skwidv"></span>
+          </div>
+          <div class="row" id="skedgerow">
+            <label class="lbl">Край</label>
+            <div class="chips" id="skedge">
+              <button class="sm" data-e="cut">рівний</button>
+              <button class="sm" data-e="torn">рваний</button>
+            </div>
+            <button class="sm" id="skcrumple">зіжмаканий</button>
+          </div>
+          <div class="row" id="skpatrow">
+            <label class="lbl">Папір</label>
+            <div class="chips" id="skpat">
+              <button class="sm" data-p="none">чистий</button>
+              <button class="sm" data-p="lines">лінійка</button>
+              <button class="sm" data-p="grid">клітинка</button>
+            </div>
+          </div>
+          <div class="row" id="skcolorrow">
+            <label class="lbl">Колір</label>
+            <input type="color" id="skcolor">
+            <span class="hint">папір і фігури</span>
+          </div>
+          <div class="row">
+            <button class="sm" id="skflip">Віддзеркалити</button>
+            <button class="sm" id="skfront">над текстом</button>
+          </div>
+          <div class="row">
+            <button class="sm" id="skdup">Дублювати</button>
+            <button class="sm" id="skup">↑</button>
+            <button class="sm" id="skdn">↓</button>
+            <button class="sm" id="skdel" style="margin-left:auto">Видалити</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section data-tab="style">
-      <h2>7. Стиль тексту</h2>
+      <h2>9. Стиль тексту</h2>
       <div class="pad">
         <div class="chips" id="styles"></div>
         <div class="row"><span class="hint">Стиль міняє шрифт, колір, затемнення й розташування одразу.</span></div>
@@ -314,7 +492,7 @@
     </section>
 
     <section data-tab="style">
-      <h2>8. Розкладка</h2>
+      <h2>10. Розкладка</h2>
       <div class="pad">
         <div class="chips">
           <button class="sm" data-lay="top">Вгорі</button>
@@ -325,7 +503,7 @@
     </section>
 
     <section data-tab="style">
-      <h2>9. Шари тексту</h2>
+      <h2>11. Шари тексту</h2>
       <div class="pad">
         <div class="layers" id="layers"></div>
         <div id="noLayers" class="hint" style="padding:4px 0">Оберіть текст зі списку вище.</div>
@@ -560,7 +738,8 @@ var state = {
   scrim:{type:'bottom', strength:0.62, color:'#000000'},
   layers: [],
   sel: null,
-  emoji: true,
+  stickers: [],
+  selSticker: null,
   textIdx: -1,
   styleId: 'classic',
   pos: 'bottom',
@@ -680,6 +859,1338 @@ function drawLayer(c, L, W, H){
   c.restore();
 }
 
+/* ═══════════ наклейки ═══════════ */
+
+/* Фігури малюються кодом, без картинок: лишаються чіткими на будь-якій
+   роздільності й працюють офлайн. Координати нормовані — y ∈ [-0.5, 0.5],
+   ar — відношення ширини до висоти. */
+/* Наконечник стрілки в точці (x,y), напрямок ang. */
+function arrowHead(c, x, y, ang, size){
+  c.beginPath();
+  c.moveTo(x - Math.cos(ang - 0.55)*size, y - Math.sin(ang - 0.55)*size);
+  c.lineTo(x, y);
+  c.lineTo(x - Math.cos(ang + 0.55)*size, y - Math.sin(ang + 0.55)*size);
+  c.stroke();
+}
+
+function polyPath(c, n, ro, ri){
+  c.beginPath();
+  for (var i = 0; i < n*2; i++){
+    var r = i % 2 ? ri : ro;
+    var a = -Math.PI/2 + i * Math.PI / n;
+    var x = Math.cos(a)*r, y = Math.sin(a)*r;
+    if (i) c.lineTo(x,y); else c.moveTo(x,y);
+  }
+  c.closePath();
+}
+
+var SHAPES = [
+  {id:'sparkle', n:'Іскра', ar:1, d:function(c){
+    c.beginPath();
+    c.moveTo(0,-0.5);
+    c.quadraticCurveTo(0.09,-0.09, 0.5,0);
+    c.quadraticCurveTo(0.09,0.09, 0,0.5);
+    c.quadraticCurveTo(-0.09,0.09, -0.5,0);
+    c.quadraticCurveTo(-0.09,-0.09, 0,-0.5);
+    c.fill();
+  }},
+  {id:'heart', n:'Серце', ar:1, d:function(c){
+    c.beginPath();
+    c.moveTo(0,0.42);
+    c.bezierCurveTo(-0.62,0.02, -0.40,-0.50, 0,-0.19);
+    c.bezierCurveTo(0.40,-0.50, 0.62,0.02, 0,0.42);
+    c.fill();
+  }},
+  {id:'dot', n:'Крапка', ar:1, d:function(c){
+    c.beginPath(); c.arc(0,0,0.5,0,Math.PI*2); c.fill();
+  }},
+  {id:'ring', n:'Коло', ar:1, d:function(c){
+    c.lineWidth = 0.085;
+    c.beginPath(); c.arc(0,0,0.45,0,Math.PI*2); c.stroke();
+  }},
+  {id:'frame', n:'Рамка', ar:1, d:function(c){
+    c.lineWidth = 0.06;
+    c.beginPath();
+    if (c.roundRect) c.roundRect(-0.47,-0.47,0.94,0.94,0.12);
+    else c.rect(-0.47,-0.47,0.94,0.94);
+    c.stroke();
+  }},
+  {id:'check', n:'Галочка', ar:1, d:function(c){
+    c.lineWidth = 0.13;
+    c.beginPath(); c.moveTo(-0.42,0.02); c.lineTo(-0.10,0.32); c.lineTo(0.44,-0.34); c.stroke();
+  }},
+  {id:'arcArrow', n:'Дуга', ar:1, d:function(c){
+    c.lineWidth = 0.075;
+    c.beginPath();
+    c.moveTo(-0.44,-0.26);
+    c.bezierCurveTo(-0.05,-0.44, 0.30,-0.18, 0.22,0.22);
+    c.stroke();
+    arrowHead(c, 0.22, 0.30, Math.PI/2 + 0.25, 0.19);
+  }},
+  {id:'sArrow', n:'Хвиля', ar:1.25, d:function(c){
+    c.lineWidth = 0.075;
+    c.beginPath();
+    c.moveTo(-0.58,0.16);
+    c.bezierCurveTo(-0.26,-0.24, -0.02,0.26, 0.34,-0.10);
+    c.stroke();
+    arrowHead(c, 0.40, -0.16, -0.72, 0.19);
+  }},
+  {id:'loopArrow', n:'Петля', ar:1.2, d:function(c){
+    c.lineWidth = 0.072;
+    c.beginPath();
+    c.moveTo(-0.56,0.22);
+    c.bezierCurveTo(-0.30,0.24, -0.34,-0.34, -0.02,-0.28);
+    c.bezierCurveTo(0.22,-0.24, 0.10,0.16, 0.34,0.10);
+    c.stroke();
+    arrowHead(c, 0.42, 0.08, -0.25, 0.18);
+  }},
+  {id:'zigArrow', n:'Зигзаг', ar:1.5, d:function(c){
+    c.lineWidth = 0.07;
+    c.beginPath();
+    c.moveTo(-0.70,0.10);
+    c.quadraticCurveTo(-0.50,-0.22, -0.28,0.04);
+    c.quadraticCurveTo(-0.06,0.30, 0.16,-0.02);
+    c.quadraticCurveTo(0.30,-0.22, 0.44,-0.10);
+    c.stroke();
+    arrowHead(c, 0.50, -0.06, 0.5, 0.17);
+  }},
+  {id:'uArrow', n:'Розворот', ar:1.15, d:function(c){
+    c.lineWidth = 0.075;
+    c.beginPath();
+    c.moveTo(-0.34,0.36);
+    c.bezierCurveTo(-0.40,-0.30, 0.34,-0.36, 0.30,0.14);
+    c.stroke();
+    arrowHead(c, 0.30, 0.24, Math.PI/2, 0.18);
+  }},
+  {id:'arrow', n:'Стрілка', ar:1, d:function(c){
+    c.lineWidth = 0.085;
+    c.beginPath();
+    c.moveTo(-0.44,-0.34);
+    c.bezierCurveTo(0.12,-0.50, 0.36,-0.12, 0.21,0.28);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(-0.02,0.12); c.lineTo(0.20,0.36); c.lineTo(0.42,0.10);
+    c.stroke();
+  }},
+  {id:'flower', n:'Квітка', ar:1, d:function(c){
+    for (var i = 0; i < 5; i++){
+      c.save();
+      c.rotate(i * Math.PI*2/5);
+      c.beginPath();
+      c.ellipse(0,-0.28,0.155,0.23,0,0,Math.PI*2);
+      c.fill();
+      c.restore();
+    }
+    c.save();
+    c.globalCompositeOperation = 'destination-out';
+    c.beginPath(); c.arc(0,0,0.12,0,Math.PI*2); c.fill();
+    c.restore();
+  }},
+  {id:'underline', n:'Мазок', ar:4, d:function(c){
+    c.beginPath();
+    c.moveTo(-2.0,-0.06);
+    c.quadraticCurveTo(0,-0.42, 2.0,-0.14);
+    c.lineTo(2.0,0.16);
+    c.quadraticCurveTo(0,0.44, -2.0,0.22);
+    c.closePath();
+    c.fill();
+  }},
+  {id:'tape', n:'Скотч', ar:3.2, d:function(c){
+    c.save();
+    c.globalAlpha = c.globalAlpha * 0.55;
+    c.beginPath();
+    c.moveTo(-1.6,-0.42); c.lineTo(1.6,-0.5); c.lineTo(1.6,0.42); c.lineTo(-1.6,0.5);
+    c.closePath(); c.fill();
+    c.restore();
+  }},
+];
+
+function shapeById(id){
+  for (var i = 0; i < SHAPES.length; i++) if (SHAPES[i].id === id) return SHAPES[i];
+  return SHAPES[0];
+}
+
+/* ——— паперові наклейки ———
+   Вирізані з паперу зірочки, «?», серця тощо. Малюються кодом: нерівний
+   різаний край + зерно паперу. Тому лишаються чіткими на 2160 px і не
+   тягнуть за собою жодних файлів. */
+
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* Вершини фігур у нормованих координатах [-0.5, 0.5]. */
+function starPts(n, ro, ri){
+  var p = [];
+  for (var i = 0; i < n*2; i++){
+    var r = i % 2 ? ri : ro;
+    var a = -Math.PI/2 + i * Math.PI / n;
+    p.push([Math.cos(a)*r, Math.sin(a)*r]);
+  }
+  return p;
+}
+function ringPts(n, fr){
+  var p = [];
+  for (var i = 0; i < n; i++){
+    var a = i/n * Math.PI*2;
+    p.push([Math.cos(a)*fr(a), Math.sin(a)*fr(a)]);
+  }
+  return p;
+}
+
+/* Точки фігур — у «одиницях висоти»: y ∈ [-0.5, 0.5], x ∈ [-ar/2, ar/2].
+   Контурів може бути кілька — другий і далі стають дірками (evenodd). */
+function polyPts(n, r, rot){
+  var p = [];
+  for (var i = 0; i < n; i++){
+    var a = (rot || 0) + i/n * Math.PI*2;
+    p.push([Math.cos(a)*r, Math.sin(a)*r]);
+  }
+  return p;
+}
+function circPts(cx, cy, rx, ry, n){
+  var p = [];
+  n = n || 34;
+  for (var i = 0; i < n; i++){
+    var a = i/n * Math.PI*2;
+    p.push([cx + Math.cos(a)*rx, cy + Math.sin(a)*(ry == null ? rx : ry)]);
+  }
+  return p;
+}
+function rotPts(pts, a){
+  var co = Math.cos(a), si = Math.sin(a);
+  return pts.map(function(q){ return [q[0]*co - q[1]*si, q[0]*si + q[1]*co]; });
+}
+function heartPts(){
+  var p = [];
+  for (var i = 0; i < 46; i++){
+    var t = i/46 * Math.PI*2;
+    var x = 16*Math.pow(Math.sin(t),3);
+    var y = -(13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t));
+    p.push([x/34, y/34]);
+  }
+  return p;
+}
+/* Контур об'єднання кіл: для кожного променя беремо найдальший перетин. */
+function unionPts(circles, n, flatBottom){
+  var p = [];
+  for (var i = 0; i < n; i++){
+    var a = i/n * Math.PI*2, dx = Math.cos(a), dy = Math.sin(a), best = 0;
+    for (var j = 0; j < circles.length; j++){
+      var c = circles[j];
+      var b = dx*c[0] + dy*c[1];
+      var d = b*b - (c[0]*c[0] + c[1]*c[1] - c[2]*c[2]);
+      if (d < 0) continue;
+      var t = b + Math.sqrt(d);
+      if (t > best) best = t;
+    }
+    var y = dy*best;
+    p.push([dx*best, flatBottom != null ? Math.min(y, flatBottom) : y]);
+  }
+  return p;
+}
+function cloudPts(){
+  return unionPts([[-0.30,0.04,0.24],[-0.02,-0.16,0.30],[0.30,0.02,0.25],[0,0.16,0.26]], 64, 0.30);
+}
+var PLUS_PTS = [[-0.17,-0.5],[0.17,-0.5],[0.17,-0.17],[0.5,-0.17],[0.5,0.17],[0.17,0.17],
+                [0.17,0.5],[-0.17,0.5],[-0.17,0.17],[-0.5,0.17],[-0.5,-0.17],[-0.17,-0.17]];
+var ARROW_PTS = [[-0.06,-0.5],[0.20,-0.5],[0.20,-0.14],[0.50,-0.14],[0.06,0.5],[-0.50,-0.14],[-0.06,-0.14]];
+
+/* Місяць — дві дуги, порахований перетин кіл (без «хвостів» від evenodd). */
+function crescentPts(R, r, d){
+  var x = (d*d + R*R - r*r) / (2*d);
+  var y = Math.sqrt(Math.max(0, R*R - x*x));
+  var t0 = Math.atan2(y, x);                       // кут на зовнішньому колі
+  var u0 = Math.atan2(y, x - d);                   // кут на внутрішньому
+  var p = [], i, n = 40, a;
+  for (i = 0; i <= n; i++){                        // зовнішня дуга через 180°
+    a = t0 + (2*Math.PI - 2*t0) * i/n;
+    p.push([Math.cos(a)*R, Math.sin(a)*R]);
+  }
+  for (i = 0; i <= n; i++){                        // внутрішня дуга назад
+    a = (2*Math.PI - u0) - (2*Math.PI - 2*u0) * i/n;
+    p.push([d + Math.cos(a)*r, Math.sin(a)*r]);
+  }
+  return p;
+}
+
+/* Відтінок кольору: k<0 — темніше, k>0 — світліше. */
+function shadeHex(hex, k){
+  var h = String(hex).replace('#','');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n = parseInt(h,16), r = (n>>16)&255, g = (n>>8)&255, b = n&255;
+  var t = k < 0 ? 0 : 255, a = Math.abs(k);
+  return 'rgb(' + Math.round(r+(t-r)*a) + ',' + Math.round(g+(t-g)*a) + ',' + Math.round(b+(t-b)*a) + ')';
+}
+
+/* Пелюсткова розетка: n пелюсток радіусом rad, повернута на rot. */
+function petalPts(n, rad, rot, fat){
+  return ringPts(110, function(a){
+    return rad * ((1-fat) + fat*Math.pow(Math.abs(Math.cos(n/2*(a - rot))), 0.8));
+  });
+}
+
+/* Троянда — кілька шарів пелюсток із власною тінню, як складена з паперу. */
+function drawRose(x, S, bw, bh, unit, fill, pathOf, tint){
+  var L = [
+    {rad:0.50, n:5, rot:0.00, k:-0.34, fat:0.40},
+    {rad:0.40, n:5, rot:0.63, k:-0.20, fat:0.38},
+    {rad:0.31, n:5, rot:1.26, k:-0.06, fat:0.36},
+    {rad:0.22, n:4, rot:1.90, k: 0.10, fat:0.34},
+    {rad:0.14, n:3, rot:2.50, k: 0.24, fat:0.32},
+  ];
+  for (var i = 0; i < L.length; i++){
+    fill([petalPts(L[i].n, L[i].rad, L[i].rot, L[i].fat)],
+         tint(L[i].k), (S.seed||1) + i*31);
+  }
+  if (S.layered === false) return;                 // плаский варіант — без завитка
+  x.save();                                        // серединка-завиток
+  x.translate(bw/2, bh/2);
+  x.strokeStyle = shadeHex(S.color, -0.45);
+  x.lineWidth = Math.max(1.2, unit*0.026);
+  x.lineCap = 'round';
+  x.beginPath();
+  for (var t = 0; t < Math.PI*3.2; t += 0.1){
+    var r = unit * (0.010 + t*0.020);
+    var px = Math.cos(t)*r, py = Math.sin(t)*r;
+    if (t === 0) x.moveTo(px, py); else x.lineTo(px, py);
+  }
+  x.stroke();
+  x.restore();
+}
+
+/* Дуга еліпса точками — для об'ємних деталей. */
+function arcPts(cx, cy, rx, ry, a0, a1, n){
+  var p = [];
+  for (var i = 0; i <= n; i++){
+    var a = a0 + (a1-a0) * i/n;
+    p.push([cx + Math.cos(a)*rx, cy + Math.sin(a)*ry]);
+  }
+  return p;
+}
+function ellPts(cx, cy, rx, ry, n){
+  n = n || 28;
+  return arcPts(cx, cy, rx, ry, 0, Math.PI*2 * (1 - 1/n), n);
+}
+
+/* Кубічна крива точками — щоб контури були плавні, а не кутасті.
+   segs — список [p0,c1,c2,p3]; кінець одного сегмента = початок наступного. */
+function bezPts(segs, per){
+  var p = [];
+  per = per || 12;
+  for (var s = 0; s < segs.length; s++){
+    var g = segs[s], p0 = g[0], c1 = g[1], c2 = g[2], p3 = g[3];
+    for (var i = (s ? 1 : 0); i <= per; i++){
+      var t = i/per, u = 1-t;
+      p.push([
+        u*u*u*p0[0] + 3*u*u*t*c1[0] + 3*u*t*t*c2[0] + t*t*t*p3[0],
+        u*u*u*p0[1] + 3*u*u*t*c1[1] + 3*u*t*t*c2[1] + t*t*t*p3[1],
+      ]);
+    }
+  }
+  return p;
+}
+function mirrorX(pts){
+  var p = [];
+  for (var i = 0; i < pts.length; i++) p.push([-pts[i][0], pts[i][1]]);
+  return p;
+}
+
+/* Канцелярська кнопка: голка, комірець, кругла шапочка з відблиском. */
+function drawPinBody(x, S, unit, fill, tip, tint, w0, w1){
+  var sd = S.seed || 1;
+  tint = tint || function(k){ return shadeHex(S.color, k); };
+  fill([[[-w0,-0.06],[w0,-0.06],[w1,tip],[-w1,tip]]], '#c4c8cf', sd);                   // голка
+  if (S.layered !== false)
+    fill([[[w0*0.15,-0.04],[w0*0.85,-0.04],[w1*0.85,tip-0.012],[w1*0.15,tip-0.012]]],
+         '#90949d', sd+3);                                                              // блиск металу
+  fill([ellPts(0, -0.06, 0.21, 0.055, 26)], tint(-0.36), sd+7);                         // комірець
+  fill([arcPts(0, -0.18, 0.34, 0.30, Math.PI, Math.PI*2, 26)                            // шапочка
+        .concat(arcPts(0, -0.18, 0.34, 0.11, 0, Math.PI, 18))], S.color, sd+11);
+  if (S.layered !== false)
+    fill([arcPts(-0.09, -0.30, 0.145, 0.08, -0.45, Math.PI*2 - 0.45, 24)],              // відблиск
+         shadeHex(S.color, 0.45), sd+15);
+}
+
+/* Ще не причеплена — голка на всю довжину. */
+function drawPin(x, S, bw, bh, unit, fill, pathOf, tint){
+  drawPinBody(x, S, unit, fill, 0.50, tint, 0.034, 0.004);      // довга гостра голка
+}
+
+/* Уже причеплена — з-під комірця визирає лише кінчик голки. */
+function drawPinStuck(x, S, bw, bh, unit, fill, pathOf, tint){
+  drawPinBody(x, S, unit, fill, 0.13, tint, 0.062, 0.056);      // товстий кінчик у поверхні
+}
+
+/* Відбиток губ: верхня з «лучком Купідона», нижня — окремо, з розривом. */
+function lipsUpper(){
+  return bezPts([
+    [[-0.74,0.00], [-0.54,-0.26], [-0.34,-0.36], [-0.17,-0.33]],
+    [[-0.17,-0.33],[-0.10,-0.31], [-0.05,-0.20], [0,-0.17]],
+    [[0,-0.17],    [0.05,-0.20],  [0.10,-0.31],  [0.17,-0.33]],
+    [[0.17,-0.33], [0.34,-0.36],  [0.54,-0.26],  [0.74,0.00]],
+    [[0.74,0.00],  [0.44,0.05],   [0.22,0.08],   [0,0.08]],
+    [[0,0.08],     [-0.22,0.08],  [-0.44,0.05],  [-0.74,0.00]],
+  ], 10);
+}
+function lipsLower(){
+  return bezPts([
+    [[-0.66,0.10], [-0.40,0.14],  [-0.20,0.16],  [0,0.16]],
+    [[0,0.16],     [0.20,0.16],   [0.40,0.14],   [0.66,0.10]],
+    [[0.66,0.10],  [0.54,0.30],   [0.30,0.46],   [0,0.48]],
+    [[0,0.48],     [-0.30,0.46],  [-0.54,0.30],  [-0.66,0.10]],
+  ], 12);
+}
+function drawLips(x, S, bw, bh, unit, fill, pathOf, tint){
+  var sd = S.seed || 1;
+  var up = lipsUpper(), lo = lipsLower();
+  fill([up], tint(-0.24), sd);
+  fill([lo], S.color, sd+13);
+  if (S.layered === false) return;                 // плаский варіант — без мазків
+
+  x.save();                                        // мазки помади
+  pathOf([up, lo], sd+21);
+  x.clip('evenodd');
+  var rnd = mulberry32(sd + 41);
+  for (var i = 0; i < 30; i++){
+    var px = bw*rnd(), py = bh*rnd(), len = unit*(0.05 + rnd()*0.14);
+    x.strokeStyle = rnd() < 0.55
+      ? 'rgba(255,255,255,' + (0.08 + rnd()*0.16).toFixed(3) + ')'
+      : 'rgba(0,0,0,'       + (0.05 + rnd()*0.09).toFixed(3) + ')';
+    x.lineWidth = Math.max(0.8, unit*(0.006 + rnd()*0.010));
+    x.lineCap = 'round';
+    x.beginPath();
+    x.moveTo(px, py - len/2);
+    x.quadraticCurveTo(px + (rnd()-0.5)*unit*0.05, py, px, py + len/2);
+    x.stroke();
+  }
+  x.restore();
+}
+
+/* Тюльпан: дві бічні пелюстки й передня — шарами, як у решти квітів. */
+function tulipSide(){
+  return bezPts([
+    [[-0.30,-0.42], [-0.40,-0.30], [-0.44,-0.14], [-0.42,0.02]],
+    [[-0.42,0.02],  [-0.40,0.26],  [-0.22,0.42],  [-0.02,0.42]],
+    [[-0.02,0.42],  [-0.10,0.16],  [-0.16,-0.16], [-0.30,-0.42]],
+  ], 12);
+}
+function tulipFront(){
+  return bezPts([
+    [[0,-0.48],  [0.14,-0.40], [0.26,-0.20], [0.27,0.02]],
+    [[0.27,0.02],[0.28,0.26],  [0.16,0.44],  [0,0.46]],
+    [[0,0.46],   [-0.16,0.44], [-0.28,0.26], [-0.27,0.02]],
+    [[-0.27,0.02],[-0.26,-0.20],[-0.14,-0.40],[0,-0.48]],
+  ], 12);
+}
+function drawTulip(x, S, bw, bh, unit, fill, pathOf, tint){
+  var sd = S.seed || 1, side = tulipSide();
+  fill([side],            tint(-0.32), sd);                    // ліва
+  fill([mirrorX(side)],   tint(-0.16), sd+5);                  // права
+  fill([tulipFront()],    S.color, sd+9);                      // передня
+  if (S.layered === false) return;                             // плаский — без складки
+  fill([bezPts([
+    [[0,-0.34],   [0.07,-0.28], [0.11,-0.10], [0.10,0.06]],
+    [[0.10,0.06], [0.09,0.18],  [0.05,0.26],  [0,0.28]],
+    [[0,0.28],    [-0.05,0.26], [-0.09,0.18], [-0.10,0.06]],
+    [[-0.10,0.06],[-0.11,-0.10],[-0.07,-0.28],[0,-0.34]],
+  ], 10)], shadeHex(S.color, 0.22), sd+13);                    // світла складка
+}
+
+/* Дрібні деталі для «шарами»: масштаб і зсув контуру. */
+function scPts(pts, k, dx, dy){
+  return pts.map(function(q){ return [q[0]*k + (dx||0), q[1]*k + (dy||0)]; });
+}
+
+/* d(контур, відтінок, зерно) — залити деталь усередині фігури. */
+var DETAILS = {
+  leaf: function(S, d, sd){
+    d([[[0,-0.5],[0.26,-0.14],[0.30,0.12],[0,0.5]]], shadeHex(S.color, 0.15), sd);
+    for (var i = 0; i < 3; i++){                    // бічні прожилки
+      var y = -0.22 + i*0.20, r = 0.20 - i*0.03;
+      d([[[0,y],[r,y+0.13],[r*0.94,y+0.175],[0,y+0.05]]], shadeHex(S.color, -0.18), sd+i);
+      d([[[0,y],[-r,y+0.13],[-r*0.94,y+0.175],[0,y+0.05]]], shadeHex(S.color, -0.18), sd+i+9);
+    }
+    d([[[-0.022,-0.44],[0.022,-0.44],[0.012,0.46],[-0.012,0.46]]], shadeHex(S.color, -0.30), sd+7);
+  },
+  crown: function(S, d, sd){
+    d([[[-0.56,0.13],[0.56,0.13],[0.56,0.36],[-0.56,0.36]]], shadeHex(S.color, -0.24), sd);
+    d([ellPts(0, 0.245, 0.085, 0.085, 20)], shadeHex(S.color, 0.40), sd+3);
+    [[-0.50,-0.31],[0,-0.40],[0.50,-0.31]].forEach(function(c, i){
+      d([ellPts(c[0], c[1], 0.075, 0.075, 18)], shadeHex(S.color, 0.38), sd+7+i);
+    });
+  },
+  bow: function(S, d, sd){
+    d([[[-0.74,-0.22],[-0.22,-0.03],[-0.22,0.03],[-0.74,0.22]]], shadeHex(S.color, 0.17), sd);
+    d([[[0.74,-0.22],[0.22,-0.03],[0.22,0.03],[0.74,0.22]]],     shadeHex(S.color, 0.17), sd+3);
+    d([ellPts(0, 0, 0.135, 0.17, 22)], shadeHex(S.color, -0.26), sd+7);
+    d([ellPts(-0.03, -0.045, 0.055, 0.07, 18)], shadeHex(S.color, 0.22), sd+11);
+  },
+  tape: function(S, d, sd){
+    d([[[-1.52,-0.24],[1.52,-0.30],[1.52,-0.16],[-1.52,-0.10]]], shadeHex(S.color, 0.16), sd);
+    d([[[-1.52,0.10],[1.52,0.04],[1.52,0.20],[-1.52,0.26]]],     shadeHex(S.color, -0.12), sd+3);
+  },
+  strip: function(S, d, sd){
+    d([[[-2.0,-0.16],[2.0,-0.20],[2.0,-0.06],[-2.0,-0.02]]], shadeHex(S.color, 0.16), sd);
+    d([[[-2.0,0.12],[2.0,0.08],[2.0,0.22],[-2.0,0.26]]],     shadeHex(S.color, -0.12), sd+3);
+  },
+  banner: function(S, d, sd){
+    d([[[-1.30,-0.36],[-1.08,-0.36],[-1.08,0.36],[-1.30,0.36]]], shadeHex(S.color, -0.26), sd);
+    d([[[1.30,-0.36],[1.08,-0.36],[1.08,0.36],[1.30,0.36]]],     shadeHex(S.color, -0.26), sd+3);
+    d([[[-1.0,-0.20],[1.0,-0.20],[1.0,-0.05],[-1.0,-0.05]]],     shadeHex(S.color, 0.15), sd+7);
+  },
+  tag: function(S, d, sd){
+    d([[[-0.12,-0.34],[0.52,-0.34],[0.52,0.34],[-0.12,0.34]]], shadeHex(S.color, 0.14), sd);
+    d([ellPts(-0.34, 0, 0.155, 0.155, 22)], shadeHex(S.color, -0.24), sd+3);
+  },
+  heart: function(S, d, sd){
+    d([scPts(heartPts(), 0.62, -0.04, -0.03)], shadeHex(S.color, 0.20), sd);
+    d([ellPts(-0.17, -0.13, 0.075, 0.05, 18)], 'rgba(255,255,255,.55)', sd+3);
+  },
+  drop: function(S, d, sd){
+    d([ellPts(-0.09, 0.14, 0.085, 0.13, 20)], shadeHex(S.color, 0.34), sd);
+  },
+  bolt: function(S, d, sd){
+    d([[[0.10,-0.34],[0.27,-0.34],[0.11,-0.05],[0.28,-0.05],[-0.02,0.34],[0.04,0.03],[-0.15,0.03]]],
+      shadeHex(S.color, 0.20), sd);
+  },
+  bubble: function(S, d, sd){
+    d([[[-0.50,-0.38],[0.50,-0.38],[0.50,0.06],[-0.50,0.06]]], shadeHex(S.color, 0.13), sd);
+  },
+  ring: function(S, d, sd){
+    d([ellPts(0, 0, 0.40, 0.40, 30)], shadeHex(S.color, 0.16), sd);
+  },
+  frame: function(S, d, sd){
+    d([[[-0.42,-0.42],[0.42,-0.42],[0.42,0.42],[-0.42,0.42]]], shadeHex(S.color, 0.15), sd);
+  },
+};
+['flower','daisy','sakura','bloom'].forEach(function(id){    // серединка квітки
+  DETAILS[id] = function(S, d, sd){
+    d([ellPts(0, 0, 0.175, 0.175, 24)], shadeHex(S.color, 0.36), sd);
+    d([ellPts(0, 0, 0.085, 0.085, 18)], shadeHex(S.color, -0.20), sd+3);
+  };
+});
+
+/* Готові паперові наклейки — «на всі випадки життя». */
+var PAPERS = [
+  /* зірки та блиск */
+  {id:'star',    n:'Зірка',    ar:1,   pts:function(){ return starPts(5, 0.5, 0.22); }},
+  {id:'star4',   n:'Іскра',    ar:1,   pts:function(){ return starPts(4, 0.5, 0.14); }},
+  {id:'star6',   n:'Зірочка',  ar:1,   pts:function(){ return starPts(6, 0.5, 0.26); }},
+  {id:'burst',   n:'Спалах',   ar:1,   pts:function(){ return starPts(11, 0.5, 0.37); }},
+  {id:'sun',     n:'Сонце',    ar:1,   pts:function(){ return starPts(14, 0.5, 0.33); }},
+  {id:'spark3',  n:'Промінь',  ar:1,   pts:function(){ return starPts(3, 0.5, 0.17); }},
+
+  /* серця й квіти */
+  {id:'heart',   n:'Серце',    ar:1,   pts:heartPts},
+  {id:'lips',    n:'Губи',     ar:1.5, custom:drawLips,
+                 outline:function(){ return ellPts(0, 0.06, 0.78, 0.44, 34); }},
+  {id:'pin',     n:'Кнопка',   ar:0.85,custom:drawPin,
+                 outline:function(){ return ellPts(0, 0.02, 0.38, 0.50, 34); }},
+  {id:'pin2',    n:'Кнопка причеплена', ar:1.05, custom:drawPinStuck, attach:'stuck',
+                 outline:function(){ return ellPts(0, -0.10, 0.44, 0.36, 34); }},
+  {id:'flower',  n:'Квітка',   ar:1,   pts:function(){
+    return ringPts(90, function(a){ return 0.5*(0.60 + 0.40*Math.abs(Math.cos(2.5*a))); });
+  }},
+  {id:'rose',    n:'Троянда',  ar:1,   custom:drawRose,
+                 outline:function(){ return ellPts(0, 0, 0.50, 0.50, 34); }},
+  {id:'rose2',   n:'Бутон',    ar:1,
+                 outline:function(){ return ellPts(0, 0, 0.50, 0.50, 34); },
+                 custom:function(x, S, bw, bh, unit, fill, pathOf, tint){
+    fill([petalPts(6, 0.50, 0, 0.30)], tint(-0.22), (S.seed||1));
+    fill([petalPts(5, 0.36, 0.5, 0.32)], tint(-0.04), (S.seed||1)+5);
+    fill([petalPts(4, 0.22, 1.1, 0.30)], tint(0.14), (S.seed||1)+9);
+  }},
+  {id:'daisy',   n:'Ромашка',  ar:1,   pts:function(){
+    return ringPts(140, function(a){ return 0.5*(0.42 + 0.58*Math.pow(Math.abs(Math.cos(5*a)),0.55)); });
+  }},
+  {id:'bloom',   n:'Півонія',  ar:1,   pts:function(){
+    return ringPts(120, function(a){ return 0.5*(0.66 + 0.34*Math.abs(Math.cos(3*a))); });
+  }},
+  {id:'sakura',  n:'Сакура',   ar:1,   pts:function(){
+    return ringPts(120, function(a){ return 0.5*(0.50 + 0.50*Math.pow(Math.abs(Math.cos(2.5*a)),0.75)); });
+  }},
+  {id:'tulip',   n:'Тюльпан',  ar:0.9, custom:drawTulip,
+                 outline:function(){ return ellPts(0, 0, 0.44, 0.50, 34); }},
+  {id:'bow',     n:'Бантик',   ar:1.6, pts:function(){
+    return [[-0.80,-0.34],[-0.16,-0.07],[0.16,-0.07],[0.80,-0.34],
+            [0.80,0.34],[0.16,0.07],[-0.16,0.07],[-0.80,0.34]];
+  }},
+  {id:'leaf',    n:'Листок',   ar:1,   pts:function(){
+    return [[0,-0.5],[0.26,-0.14],[0.30,0.12],[0,0.5],[-0.30,0.12],[-0.26,-0.14]];
+  }},
+
+  /* базові форми */
+  {id:'circle',  n:'Кружок',   ar:1,   pts:function(){ return circPts(0,0,0.48); }},
+  {id:'ring',    n:'Кільце',   ar:1,   multi:true, pts:function(){
+    return [circPts(0,0,0.48), circPts(0,0,0.28)];
+  }},
+  {id:'oval',    n:'Овал',     ar:1.7, pts:function(){ return circPts(0,0,0.80,0.46,40); }},
+  {id:'blob',    n:'Пляма',    ar:1,   pts:function(){
+    return ringPts(30, function(a){ return 0.46 + 0.045*Math.sin(3*a+0.7) + 0.03*Math.sin(5*a); });
+  }},
+  {id:'square',  n:'Квадрат',  ar:1,   pts:function(){
+    return [[-0.47,-0.47],[0.47,-0.47],[0.47,0.47],[-0.47,0.47]];
+  }},
+  {id:'note',    n:'Аркуш',    ar:1.45,pts:function(){
+    return [[-0.70,-0.46],[0.70,-0.48],[0.70,0.46],[-0.70,0.48]];
+  }},
+  {id:'frame',   n:'Рамка',    ar:1,   multi:true, pts:function(){
+    return [[[-0.48,-0.48],[0.48,-0.48],[0.48,0.48],[-0.48,0.48]],
+            [[-0.34,-0.34],[0.34,-0.34],[0.34,0.34],[-0.34,0.34]]];
+  }},
+  {id:'tri',     n:'Трикутник',ar:1,   pts:function(){ return polyPts(3, 0.52, -Math.PI/2); }},
+  {id:'diamond', n:'Ромб',     ar:1,   pts:function(){ return polyPts(4, 0.5, -Math.PI/2); }},
+  {id:'hex',     n:'Шестикут', ar:1,   pts:function(){ return polyPts(6, 0.5, -Math.PI/2); }},
+  {id:'crescent',n:'Місяць',   ar:1,   pts:function(){ return crescentPts(0.48, 0.44, 0.30); }},
+
+  /* мова й підказки */
+  {id:'bubble',  n:'Хмаринка', ar:1.35,pts:function(){
+    return [[-0.62,-0.42],[-0.50,-0.50],[0.50,-0.50],[0.62,-0.42],[0.62,0.10],[0.50,0.20],
+            [0.02,0.20],[-0.10,0.50],[-0.18,0.20],[-0.50,0.20],[-0.62,0.10]];
+  }},
+  {id:'cloud',   n:'Хмара',    ar:1.1, pts:cloudPts},
+
+  /* акценти */
+  {id:'bolt',    n:'Блискавка',ar:1,   pts:function(){
+    return [[0.06,-0.5],[0.36,-0.5],[0.12,-0.08],[0.40,-0.08],[-0.10,0.5],[0.02,0.06],[-0.26,0.06]];
+  }},
+  {id:'drop',    n:'Крапля',   ar:1,   pts:function(){
+    return [[0,-0.5],[0.14,-0.18],[0.30,0.02],[0.34,0.20],[0.22,0.40],[0,0.47],
+            [-0.22,0.40],[-0.34,0.20],[-0.30,0.02],[-0.14,-0.18]];
+  }},
+  {id:'crown',   n:'Корона',   ar:1.15,pts:function(){
+    return [[-0.56,0.36],[-0.50,-0.36],[-0.24,-0.02],[0,-0.46],[0.24,-0.02],[0.50,-0.36],[0.56,0.36]];
+  }},
+  {id:'plus',    n:'Плюс',     ar:1,   pts:function(){ return PLUS_PTS; }},
+  {id:'xmark',   n:'Хрестик',  ar:1,   pts:function(){ return rotPts(PLUS_PTS, Math.PI/4); }},
+  {id:'check',   n:'Галочка',  ar:1,   pts:function(){
+    return [[-0.46,-0.04],[-0.28,-0.22],[-0.10,0.00],[0.28,-0.44],[0.46,-0.26],[-0.10,0.44]];
+  }},
+
+  /* стрілки */
+  {id:'arrowU',  n:'Стрілка ↑',ar:1,   pts:function(){ return ARROW_PTS; }},
+  {id:'arrowD',  n:'Стрілка ↓',ar:1,   pts:function(){ return rotPts(ARROW_PTS, Math.PI); }},
+  {id:'arrowR',  n:'Стрілка →',ar:1,   pts:function(){ return rotPts(ARROW_PTS, -Math.PI/2); }},
+  {id:'arrowL',  n:'Стрілка ←',ar:1,   pts:function(){ return rotPts(ARROW_PTS, Math.PI/2); }},
+
+  /* стрічки й скотч */
+  {id:'banner',  n:'Стрічка',  ar:2.6, pts:function(){
+    return [[-1.30,-0.36],[1.30,-0.36],[1.05,0],[1.30,0.36],[-1.30,0.36],[-1.05,0]];
+  }},
+  {id:'tag',     n:'Бирка',    ar:1.3, multi:true, pts:function(){
+    return [[[-0.65,-0.14],[-0.32,-0.48],[0.65,-0.48],[0.65,0.48],[-0.32,0.48],[-0.65,0.14]],
+            circPts(-0.34,0,0.09,0.09,16)];
+  }},
+  {id:'tape',    n:'Скотч',    ar:3.2, pts:function(){
+    return [[-1.60,-0.40],[-0.55,-0.47],[0.55,-0.42],[1.60,-0.50],
+            [1.60,0.42],[0.55,0.50],[-0.55,0.44],[-1.60,0.50]];
+  }},
+  {id:'strip',   n:'Смужка',   ar:4.2, pts:function(){
+    return [[-2.10,-0.30],[0,-0.40],[2.10,-0.32],[2.10,0.34],[0,0.42],[-2.10,0.32]];
+  }},
+];
+
+/* Кожна фігура без власних деталей отримує «два аркуші»: темніший зсунутий
+   низ по краю і світліший менший верх. В одношаровому режимі цього немає. */
+PAPERS.forEach(function(P){
+  if (DETAILS[P.id] || P.custom) return;
+  DETAILS[P.id] = function(S, d, sd){
+    var raw = P.pts(), cs = P.multi ? raw : [raw];
+    d(cs.map(function(c){ return scPts(c, 0.99, 0.035, 0.042); }), shadeHex(S.color, -0.20), sd);
+    d(cs.map(function(c){ return scPts(c, 0.80, -0.022, -0.032); }), shadeHex(S.color, 0.20), sd+3);
+  };
+});
+
+/* Згладжування кутів контуру: кожне ребро ділиться на дві точки —
+   гострі кути стають округлими, форма лишається впізнаваною. */
+/* Рівномірно прорідити контур: точки через кожні `spacing` одиниць. */
+function resamplePts(pts, spacing){
+  var out = [pts[0]], acc = 0;
+  for (var i = 1; i <= pts.length; i++){
+    var a = pts[i-1], b = pts[i % pts.length];
+    var seg = Math.hypot(b[0]-a[0], b[1]-a[1]);
+    if (!seg) continue;
+    acc += seg;
+    if (acc >= spacing){ out.push(b); acc = 0; }
+  }
+  return out.length > 4 ? out : pts;
+}
+
+function chaikin(pts, iters){
+  var p = pts;
+  for (var it = 0; it < (iters || 1); it++){
+    var out = [];
+    for (var i = 0; i < p.length; i++){
+      var a = p[i], b = p[(i+1) % p.length];
+      out.push([a[0]*0.75 + b[0]*0.25, a[1]*0.75 + b[1]*0.25]);
+      out.push([a[0]*0.25 + b[0]*0.75, a[1]*0.25 + b[1]*0.75]);
+    }
+    p = out;
+  }
+  return p;
+}
+
+function paperById(id){
+  for (var i = 0; i < PAPERS.length; i++) if (PAPERS[i].id === id) return PAPERS[i];
+  return PAPERS[0];
+}
+
+/* Готові паперові написи — один клік, далі можна вписати будь-що своє. */
+var PAPER_WORDS = ['?','!','№1','1','2','3','4','5','NEW','TOP','SALE','%','АКЦІЯ','ЗАПИС','ХІТ','УВАГА','WOW','СТОП','→','★'];
+
+/* Кольори паперу */
+var PAPER_COLORS = [
+  '#fffdf7','#f7f0e2','#f2e7d5','#e8d5b7',   // білий, кремовий, пісочний, беж
+  '#deb673','#e8b04b','#f0a04b','#e07a5f',   // золото, мед, помаранч, теракота
+  '#c94f4f','#a63d40','#f4bccb','#de739b',   // червоний, бордо, рожевий, фуксія
+  '#c2678d','#b9a6d4','#8f7bbd','#7fa8d4',   // слива, лаванда, фіолет, блакить
+  '#4f7cac','#a9c9bb','#6fae8f','#4a7c59',   // синій, мʼята, зелений, хвоя
+  '#8d6b4a','#5c4a3a','#9aa0a6','#2b2b2b',   // коричневий, кава, сірий, чорний
+];
+
+var PAPER_FONT = "800 %spx 'Helvetica Neue',Helvetica,Arial,sans-serif";
+
+/* Нерівний, «різаний ножицями» контур: кожне ребро ділиться на відрізки
+   з невеликим випадковим зсувом, кути лишаються майже точними. */
+function roughContour(x, pts, w, h, unit, rnd, amp, step, unitX){
+  var ux = unitX || unit;
+  var n = pts.length, first = true;
+  for (var i = 0; i < n; i++){
+    var a = pts[i], b = pts[(i+1)%n];
+    var ex = b[0]-a[0], ey = b[1]-a[1];
+    var len = Math.hypot(ex, ey) || 1e-6;
+    var nx = -ey/len, ny = ex/len;                 // нормаль до ребра
+    var seg = clamp(Math.round(len/step), 1, 60);
+    for (var k = 0; k < seg; k++){
+      var t = k/seg;
+      var off   = (rnd()-0.5) * amp;               // впоперек — «зуби» краю
+      var along = (rnd()-0.5) * amp * 0.4;
+      if (k === 0){ off *= 0.25; along *= 0.25; }  // кути лишаємо на місці
+      var X = w/2 + (a[0] + ex*t + nx*off + ex/len*along) * ux;
+      var Y = h/2 + (a[1] + ey*t + ny*off + ey/len*along) * unit;
+      if (first){ x.moveTo(X, Y); first = false; } else x.lineTo(X, Y);
+    }
+  }
+  x.closePath();
+}
+
+function roughPath(x, conts, w, h, unit, rnd, amp, step, unitX){
+  x.beginPath();
+  for (var i = 0; i < conts.length; i++)
+    roughContour(x, conts[i], w, h, unit, rnd, amp, step, unitX);
+}
+
+/* Лінійка / клітинка — як на аркуші із зошита. */
+function notebookLines(x, w, h, kind, clipped){
+  var gap = Math.max(6, h*0.135);
+  x.save();
+  if (!clipped) x.globalCompositeOperation = 'source-atop';
+  x.strokeStyle = 'rgba(86,132,190,.45)';
+  x.lineWidth = Math.max(0.8, h*0.008);
+  for (var y = gap; y < h; y += gap){
+    x.beginPath(); x.moveTo(0, y); x.lineTo(w, y); x.stroke();
+  }
+  if (kind === 'grid'){
+    for (var vx = gap; vx < w; vx += gap){
+      x.beginPath(); x.moveTo(vx, 0); x.lineTo(vx, h); x.stroke();
+    }
+  } else {
+    x.strokeStyle = 'rgba(206,86,86,.45)';         // поле червоною
+    x.beginPath(); x.moveTo(w*0.14, 0); x.lineTo(w*0.14, h); x.stroke();
+  }
+  x.restore();
+}
+
+/* Зіжмаканий папір. Сітка вузлів із випадковою «висотою» (дві частоти —
+   великі бані плюс дрібні складки) ділиться на трикутні грані; кожна грань
+   світліє або темніє за нахилом до світла. Довгі заломи — блукання по
+   вузлах у бік найбільшого перепаду — малюються м'якими смугами світла
+   й тіні, тож читаються як згин паперу, а не як намальована лінія. */
+function crumple(x, w, h, unit, rnd){
+  var cell = Math.max(7, Math.min(w, h) * 0.095);
+  var cols = Math.ceil(w/cell) + 2, rows = Math.ceil(h/cell) + 2;
+  var coarse = [], P = [], i, j;
+  for (j = 0; j <= Math.ceil(rows/3); j++){
+    coarse[j] = [];
+    for (i = 0; i <= Math.ceil(cols/3); i++) coarse[j][i] = (rnd()-0.5) * cell * 1.5;
+  }
+  for (j = 0; j < rows; j++){
+    P[j] = [];
+    for (i = 0; i < cols; i++){
+      var cj = coarse[Math.floor(j/3)], cz = cj ? (cj[Math.floor(i/3)] || 0) : 0;
+      P[j][i] = {
+        x: (i-0.5)*cell + (rnd()-0.5)*cell*0.8,
+        y: (j-0.5)*cell + (rnd()-0.5)*cell*0.8,
+        z: cz*0.6 + (rnd()-0.5)*cell*0.8,
+      };
+    }
+  }
+  var lx = -0.45, ly = -0.62, lz = 0.64;           // світло згори-зліва
+
+  var off = document.createElement('canvas');
+  off.width = Math.max(1, Math.round(w)); off.height = Math.max(1, Math.round(h));
+  var o = off.getContext('2d');
+
+  function face(p1, p2, p3){
+    var ax = p2.x-p1.x, ay = p2.y-p1.y, az = p2.z-p1.z;
+    var bx = p3.x-p1.x, by = p3.y-p1.y, bz = p3.z-p1.z;
+    var nx = ay*bz - az*by, ny = az*bx - ax*bz, nz = ax*by - ay*bx;
+    var len = Math.hypot(nx, ny, nz) || 1;
+    if (nz < 0){ nx = -nx; ny = -ny; nz = -nz; }
+    var d = (nx*lx + ny*ly + nz*lz) / len;
+    var v = clamp((d - lz) * 2.4, -1, 1);
+    o.fillStyle = v > 0
+      ? 'rgba(255,255,255,' + (v*0.30).toFixed(3) + ')'
+      : 'rgba(64,58,50,'    + (-v*0.24).toFixed(3) + ')';
+    o.beginPath();
+    o.moveTo(p1.x, p1.y); o.lineTo(p2.x, p2.y); o.lineTo(p3.x, p3.y);
+    o.closePath(); o.fill();
+  }
+
+  for (j = 0; j < rows-1; j++){
+    for (i = 0; i < cols-1; i++){
+      var a = P[j][i], b = P[j][i+1], c = P[j+1][i], d2 = P[j+1][i+1];
+      if ((i+j) % 2){ face(a,b,c); face(b,d2,c); }
+      else          { face(a,b,d2); face(a,d2,c); }
+    }
+  }
+
+  /* довгі заломи через увесь аркуш */
+  var DIRS = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]], bestI, bestJ;
+  var lines = [];
+  var chains = 5 + Math.round(rnd()*4);
+  for (var ch = 0; ch < chains; ch++){
+    var ci = Math.floor(rnd()*cols), cj2 = Math.floor(rnd()*rows);
+    var dir = Math.floor(rnd()*8);
+    var pts = [P[cj2][ci]], steps = 8 + Math.round(rnd()*(cols+rows)*0.55);
+    for (var st = 0; st < steps; st++){
+      var best = null, bestD = -1, bestDir = dir;
+      for (var t2 = -1; t2 <= 1; t2++){
+        var nd = (dir + t2 + 8) % 8;
+        var ni = ci + DIRS[nd][0], nj = cj2 + DIRS[nd][1];
+        if (nj < 0 || nj >= rows || ni < 0 || ni >= cols) continue;
+        var nn = P[nj][ni];
+        var dz = Math.abs(nn.z - pts[pts.length-1].z) + rnd()*cell*0.3;
+        if (dz > bestD){ bestD = dz; best = nn; bestDir = nd; bestI = ni; bestJ = nj; }
+      }
+      if (!best) break;
+      pts.push(best); dir = bestDir; ci = bestI; cj2 = bestJ;
+    }
+    if (pts.length > 3) lines.push(pts);
+  }
+
+  function strokeChain(ctx, pts, dx, dy, color, lw){
+    ctx.strokeStyle = color; ctx.lineWidth = lw;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x + dx, pts[0].y + dy);
+    for (var k = 1; k < pts.length - 1; k++){
+      ctx.quadraticCurveTo(pts[k].x + dx, pts[k].y + dy,
+                           (pts[k].x + pts[k+1].x)/2 + dx, (pts[k].y + pts[k+1].y)/2 + dy);
+    }
+    ctx.stroke();
+  }
+
+  lines.forEach(function(pts){                     // м'які смуги — до розмиття
+    strokeChain(o, pts, -cell*0.13, -cell*0.13, 'rgba(255,255,255,.26)', cell*0.34);
+    strokeChain(o, pts,  cell*0.15,  cell*0.15, 'rgba(64,58,50,.16)',    cell*0.38);
+  });
+
+  x.save();
+  try { x.filter = 'blur(' + Math.max(0.7, cell*0.10).toFixed(2) + 'px)'; } catch(e){}
+  x.drawImage(off, 0, 0, w, h);
+  x.restore();
+
+  x.save();                                        // ледь помітний гребінь згину
+  lines.forEach(function(pts){
+    strokeChain(x, pts, 0, 0, 'rgba(0,0,0,.055)', Math.max(0.6, unit*0.004));
+    strokeChain(x, pts, 1.1, 1.1, 'rgba(255,255,255,.16)', Math.max(0.6, unit*0.004));
+  });
+  x.restore();
+}
+
+/* Заливка штрихами — ніби замальовано кольоровим олівцем або фломастером:
+   нерівний натиск, розриви, білі прогалини паперу. */
+function pencilFill(x, w, h, unit, color, rnd, marker){
+  var lw   = unit * (marker ? 0.085 : 0.05);
+  var gap  = lw   * (marker ? 0.85  : 1.25);
+  var diag = Math.hypot(w, h) * 1.1;
+  x.save();
+  x.lineCap = 'round';
+  x.translate(w/2, h/2);
+  x.rotate(marker ? -0.48 : -0.66);
+  for (var pass = 0; pass < (marker ? 1 : 2); pass++){
+    if (pass) x.rotate(0.30);                       // другий шар — навхрест
+    for (var y = -diag/2; y < diag/2; y += gap){
+      var px = -diag/2 + rnd()*unit*0.2;
+      while (px < diag/2){
+        var len = unit * (marker ? 0.45 + rnd()*1.1 : 0.22 + rnd()*0.8);
+        var a   = (marker ? 0.62 : 0.34) + rnd()*(marker ? 0.3 : 0.28);
+        if (pass) a *= 0.55;
+        x.strokeStyle = hexA(color, a);
+        x.lineWidth = lw * (0.65 + rnd()*0.7);
+        x.beginPath();
+        x.moveTo(px, y + (rnd()-0.5)*lw*0.6);
+        x.quadraticCurveTo(px + len*0.5, y + (rnd()-0.5)*lw, px + len, y + (rnd()-0.5)*lw*0.6);
+        x.stroke();
+        px += len + unit * (marker ? 0.015 + rnd()*0.05 : 0.03 + rnd()*0.14);
+      }
+    }
+  }
+  x.restore();
+}
+
+/* Зерно паперу + м'який об'єм. Накладається лише на вже намальовану форму. */
+function paperGrain(x, w, h, rnd){
+  var n = clamp(Math.round(w*h/220), 300, 14000);
+  x.save();
+  x.globalCompositeOperation = 'source-atop';
+  for (var i = 0; i < n; i++){                            // дрібна крупа
+    var r = rnd()*w*0.004 + w*0.0008;
+    x.fillStyle = rnd() < 0.5
+      ? 'rgba(0,0,0,'       + (0.010 + rnd()*0.028).toFixed(3) + ')'
+      : 'rgba(255,255,255,' + (0.015 + rnd()*0.05).toFixed(3) + ')';
+    x.beginPath(); x.arc(rnd()*w, rnd()*h, r, 0, Math.PI*2); x.fill();
+  }
+  x.lineWidth = Math.max(0.5, w*0.0018);
+  for (var j = 0; j < Math.round(n*0.22); j++){           // волокна паперу
+    var fx = rnd()*w, fy = rnd()*h, fl = w*(0.015 + rnd()*0.07);
+    var fa = (rnd() < 0.5 ? 0 : Math.PI/2) + (rnd()-0.5)*0.9;
+    x.strokeStyle = rnd() < 0.55
+      ? 'rgba(0,0,0,'       + (0.008 + rnd()*0.022).toFixed(3) + ')'
+      : 'rgba(255,255,255,' + (0.012 + rnd()*0.035).toFixed(3) + ')';
+    x.beginPath();
+    x.moveTo(fx, fy); x.lineTo(fx + Math.cos(fa)*fl, fy + Math.sin(fa)*fl);
+    x.stroke();
+  }
+  for (var k = 0; k < Math.round(n*0.02); k++){           // легкі заломи
+    var cx0 = rnd()*w, cy0 = rnd()*h, cl = w*(0.15 + rnd()*0.5), ca = rnd()*Math.PI;
+    x.strokeStyle = 'rgba(0,0,0,' + (0.01 + rnd()*0.02).toFixed(3) + ')';
+    x.lineWidth = Math.max(0.7, w*0.004);
+    x.beginPath();
+    x.moveTo(cx0, cy0);
+    x.quadraticCurveTo(cx0 + Math.cos(ca)*cl*0.5 + w*0.02, cy0 + Math.sin(ca)*cl*0.5,
+                       cx0 + Math.cos(ca)*cl, cy0 + Math.sin(ca)*cl);
+    x.stroke();
+  }
+  var g = x.createLinearGradient(0, 0, w*0.55, h);        // світло згори-зліва
+  g.addColorStop(0, 'rgba(255,255,255,.13)');
+  g.addColorStop(0.55, 'rgba(255,255,255,0)');
+  g.addColorStop(1, 'rgba(0,0,0,.11)');
+  x.fillStyle = g; x.fillRect(0, 0, w, h);
+  x.restore();
+}
+
+/* Текстуру робимо один раз на «сходинку» розміру й тримаємо в кеші,
+   щоб перетягування й масштабування лишались плавними. */
+function paperBucket(px){
+  return clamp(Math.pow(2, Math.ceil(Math.log(Math.max(48, px))/Math.LN2)), 64, 2048);
+}
+
+/* Налаштувати контекст під паперовий напис і повернути кегль. */
+function paperTextFont(t, S, unit){
+  var fs = unit * 0.74;
+  t.font = PAPER_FONT.replace('%s', fs);
+  if (SUPPORTS_TRACKING) t.letterSpacing = (fs*0.09) + 'px';
+  t.textAlign = 'center'; t.textBaseline = 'middle';
+  t.lineJoin = 'round'; t.miterLimit = 2;
+  return fs;
+}
+
+/* Контур слова для підкладки: малюємо літери з товстим обведенням (щоб вони
+   злилися в один клапоть), знімаємо маску й обводимо її межу трасуванням
+   сусідів (алгоритм Мура). Далі цей контур рветься так само, як у фігур. */
+function textContours(S, bw, bh, unit){
+  /* Обведення беремо з запасом: так літери зливаються в один клапоть,
+     а дірки всередині «О», «А», «Р» закриваються. */
+  var d = Math.max(3, (bh - unit) * 0.92) + unit * 0.30;
+  var MW = Math.min(320, Math.max(90, Math.round(bw)));
+  var k = MW / bw, MH = Math.max(24, Math.round(bh * k));
+
+  var c = document.createElement('canvas');
+  c.width = MW; c.height = MH;
+  var m = c.getContext('2d');
+  m.scale(k, k);
+  paperTextFont(m, S, unit);
+  m.strokeStyle = '#fff'; m.fillStyle = '#fff';
+  m.lineWidth = d;
+  m.lineJoin = 'round';
+  m.strokeText(S.ch, bw/2, bh*0.53);
+  m.fillText(S.ch, bw/2, bh*0.53);
+
+  var px = m.getImageData(0, 0, MW, MH).data;
+  function on(x, y){
+    return (x >= 0 && y >= 0 && x < MW && y < MH && px[(y*MW + x)*4 + 3] > 128) ? 1 : 0;
+  }
+  var seen = new Uint8Array(MW*MH), loops = [];
+  var N8 = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+
+  for (var y0 = 0; y0 < MH; y0++){
+    for (var x0 = 0; x0 < MW; x0++){
+      if (!on(x0,y0) || on(x0-1,y0) || seen[y0*MW + x0]) continue;
+      var pts = [[x0,y0]], cx = x0, cy = y0, bi = 4;    // йдемо від лівого сусіда
+      seen[y0*MW + x0] = 1;
+      for (var guard = 0; guard < MW*MH*4; guard++){
+        var found = -1;
+        for (var t = 1; t <= 8; t++){
+          var dir = (bi + t) % 8;
+          var nx = cx + N8[dir][0], ny = cy + N8[dir][1];
+          if (on(nx, ny)){ found = dir; cx = nx; cy = ny; break; }
+        }
+        if (found < 0) break;
+        bi = (found + 5) % 8;                            // назад до попередньої клітинки
+        seen[cy*MW + cx] = 1;
+        if (cx === x0 && cy === y0) break;
+        pts.push([cx, cy]);
+      }
+      if (pts.length > 24) loops.push(pts);
+    }
+  }
+  if (!loops.length) return null;
+
+  return loops.map(function(pts){                        // у одиниці висоти фігури
+    var out = [];
+    for (var i = 0; i < pts.length; i++)
+      out.push([(pts[i][0] - MW/2) / MH, (pts[i][1] - MH/2) / MH]);
+    return resamplePts(chaikin(out, 2), 0.055);          // крок як у рваних фігур
+  });
+}
+
+function paperTexture(S, wpx, hpx){
+  var bw = paperBucket(wpx);
+  var bh = Math.max(16, Math.round(bw * hpx / Math.max(1, wpx)));
+  var pad = S.pad || 0;
+  var key = [S.shape, S.ch||'', S.color, S.edge||'cut', S.pattern||'none',
+             S.fill||'flat', pad, S.padShape||'same', S.padColor||'', S.padPattern||'none', S.padCrumple?1:0,
+             S.crumple?1:0, S.layered===false?0:1, (S.stretch||1).toFixed(3),
+             bw, bh, S.seed].join('|');
+  if (S._tex && S._tex.key === key) return S._tex.c;
+
+  var c = document.createElement('canvas');
+  c.width = bw; c.height = bh;
+  var x = c.getContext('2d');
+  var seed = S.seed || 1;
+  var rnd = mulberry32(seed + 917);
+  var f = 1 / (1 + pad);                           // місце під підкладку
+  var unit = bh * f;                               // 1 одиниця висоти фігури
+  var unitX = unit * (S.stretch || 1);             // окрема ширина — своя форма
+
+  /* ——— підкладка: аркуш, рваний руками ——— */
+  if (pad > 0){
+    var back, ps = S.padShape || 'same';
+    if (ps === 'same' && S.shape === 'text'){
+      back = textContours(S, bw, bh, unit);        // клапоть за формою слова
+      if (!back){
+        var hx0 = bw/(2*bh) * 0.97;
+        back = [[[-hx0,-0.47],[hx0,-0.47],[hx0,0.47],[-hx0,0.47]]];
+      }
+    } else if (ps !== 'same'){
+      var PB = paperById(ps);
+      var sx = (bw/bh) / PB.ar;                    // розтягуємо під габарит наклейки
+      sx = sx;
+      var pb = PB.pts();
+      back = [(PB.multi ? pb[0] : pb).map(function(q){ return [q[0]*sx, q[1]]; })];
+    } else if (S.shape !== 'text' && paperById(S.shape).outline){
+      back = [paperById(S.shape).outline()];      // силует складеної фігури
+    } else if (S.shape === 'text' || paperById(S.shape).custom){
+      var hx = bw/(2*bh) * 0.97;
+      back = [[[-hx,-0.47],[hx,-0.47],[hx,0.47],[-hx,0.47]]];
+    } else {
+      var pr = paperById(S.shape).pts();
+      back = paperById(S.shape).multi ? [pr[0]] : [pr];   // без дірок
+    }
+    var isTextBack = (ps === 'same' && S.shape === 'text');
+    if (!isTextBack) back = back.map(function(c){ return chaikin(scPts(c, 1.05, 0, 0), 2); });
+    var backX = (ps === 'same' && S.shape !== 'text' && !paperById(S.shape).custom)
+      ? bh*0.985*(S.stretch || 1) : bh*0.985;
+    if (ps === 'same' && S.shape === 'text') backX = bh*0.985;
+    roughPath(x, back, bw, bh, bh*0.985, mulberry32(seed + 55), 0.062, 0.06, backX);
+    x.fillStyle = S.padColor || '#fffdf7';
+    x.fill();
+    x.save();                                      // світлий злам по краю
+    roughPath(x, back, bw, bh, bh*0.985, mulberry32(seed + 55), 0.062, 0.06, backX);
+    x.clip();
+    roughPath(x, back, bw, bh, bh*0.985, mulberry32(seed + 55), 0.062, 0.06, backX);
+    x.strokeStyle = 'rgba(255,255,255,.6)';
+    x.lineWidth = Math.max(1.5, bh*0.03);
+    x.stroke();
+    x.restore();
+    if (S.padPattern && S.padPattern !== 'none'){
+      x.save();
+      roughPath(x, back, bw, bh, bh*0.985, mulberry32(seed + 55), 0.062, 0.06, backX);
+      x.clip();
+      notebookLines(x, bw, bh, S.padPattern, true);
+      x.restore();
+    }
+    if (S.padCrumple){
+      x.save();
+      roughPath(x, back, bw, bh, bh*0.985, mulberry32(seed + 55), 0.062, 0.06, backX);
+      x.clip();
+      crumple(x, bw, bh, bh, mulberry32(seed + 733));
+      x.restore();
+    }
+    paperGrain(x, bw, bh, mulberry32(seed + 611));
+  }
+
+  if (S.shape === 'text'){
+    var tc = document.createElement('canvas');
+    tc.width = bw; tc.height = bh;
+    var t = tc.getContext('2d');
+    var fs = paperTextFont(t, S, unit);
+    if (S.layered !== false){                      // товщина паперу під зрізом
+      t.strokeStyle = 'rgba(0,0,0,.20)';
+      t.lineWidth = fs * 0.14;
+      t.strokeText(S.ch, bw/2, bh*0.53 + fs*0.022);
+    }
+    t.strokeStyle = '#fffcf5';                     // білий зріз паперу
+    t.lineWidth = fs * 0.11;
+    t.strokeText(S.ch, bw/2, bh*0.53);
+    var pnc = S.fill === 'pencil' || S.fill === 'marker';
+    t.fillStyle = pnc ? '#fffdf7' : S.color;
+    t.fillText(S.ch, bw/2, bh*0.53);
+    if (pnc){
+      t.save();
+      t.globalCompositeOperation = 'source-atop';
+      pencilFill(t, bw, bh, unit, S.color, mulberry32(seed + 303), S.fill === 'marker');
+      t.restore();
+    }
+    t.save();
+    t.globalCompositeOperation = 'source-atop';
+    paperGrain(t, bw, bh, rnd);
+    t.restore();
+    x.drawImage(tc, 0, 0);
+  } else if (paperById(S.shape).custom){
+    var PC = paperById(S.shape);
+    var fill = function(conts, color, sd){
+      roughPath(x, conts, bw, bh, unit, mulberry32(sd), 0.014, 0.16, unitX);
+      x.fillStyle = color; x.fill('evenodd');
+      if (S.layered === false) return;             // пласко — без швів між шарами
+      roughPath(x, conts, bw, bh, unit, mulberry32(sd), 0.014, 0.16, unitX);
+      x.strokeStyle = 'rgba(0,0,0,.16)';
+      x.lineWidth = Math.max(1, unit*0.005);
+      x.stroke();
+    };
+    var pathOf = function(conts, sd){
+      roughPath(x, conts, bw, bh, unit, mulberry32(sd || seed), 0.014, 0.16, unitX);
+    };
+    var tint = function(k){ return S.layered === false ? S.color : shadeHex(S.color, k); };
+    PC.custom(x, S, bw, bh, unit, fill, pathOf, tint);
+    paperGrain(x, bw, bh, rnd);
+  } else {
+    var P = paperById(S.shape);
+    var raw = P.pts();
+    var conts = P.multi ? raw : [raw];
+    var torn = S.edge === 'torn';
+    var amp  = torn ? 0.055 : 0.014;
+    var step = torn ? 0.055 : 0.16;
+    var path = function(){ roughPath(x, conts, bw, bh, unit, mulberry32(seed), amp, step, unitX); };
+
+    var pencil = S.fill === 'pencil' || S.fill === 'marker';
+    path();
+    x.fillStyle = pencil ? (S.padColor || '#fffdf7') : S.color;
+    x.fill('evenodd');
+    if (pencil){
+      x.save(); path(); x.clip('evenodd');
+      pencilFill(x, bw, bh, unit, S.color, mulberry32(seed + 303), S.fill === 'marker');
+      x.restore();
+    }
+
+    if (S.layered !== false){                      // деталі другого шару + відблиск
+      x.save();
+      path(); x.clip('evenodd');                   // деталі не вилазять за фігуру
+      if (!pencil){
+        var det = function(cts, color, sd2){
+          roughPath(x, cts, bw, bh, unit, mulberry32(sd2), amp*0.6, step, unitX);
+          x.fillStyle = color;
+          x.fill('evenodd');
+        };
+        if (DETAILS[S.shape]) DETAILS[S.shape](S, det, seed + 201);
+        else {
+          x.save();
+          x.translate(-unit*0.022, -unit*0.030);
+          roughPath(x, conts, bw, bh, unit*0.84, mulberry32(seed + 201), amp*0.8, step, unitX*0.84);
+          x.fillStyle = shadeHex(S.color, 0.16);
+          x.fill('evenodd');
+          x.restore();
+        }
+      }
+      x.translate(bw*0.30, bh*0.32); x.rotate(-0.62);
+      x.fillStyle = 'rgba(255,255,255,.20)';
+      x.beginPath();
+      if (x.ellipse) x.ellipse(0, 0, Math.max(1, unit*0.055), unit*0.34, 0, 0, Math.PI*2);
+      else x.arc(0, 0, Math.max(1, unit*0.055), 0, Math.PI*2);
+      x.fill();
+      x.restore();
+    }
+
+    if (S.pattern && S.pattern !== 'none'){
+      x.save(); path(); x.clip('evenodd');
+      notebookLines(x, bw, bh, S.pattern, true);
+      x.restore();
+    }
+
+    if (S.crumple){
+      x.save(); path(); x.clip('evenodd');
+      crumple(x, bw, bh, unit, mulberry32(seed + 77));
+      x.restore();
+    }
+
+    if (torn){                                     // світлий злам — «вирвано»
+      x.save();
+      path(); x.clip('evenodd');
+      path();
+      x.strokeStyle = 'rgba(255,255,255,.72)';
+      x.lineWidth = Math.max(1.5, unit*0.035);
+      x.stroke();
+      x.restore();
+    }
+
+    path();
+    x.strokeStyle = torn ? 'rgba(0,0,0,.10)' : 'rgba(0,0,0,.13)';
+    x.lineWidth = Math.max(1, unit*0.006);
+    x.stroke();
+
+    x.save(); path(); x.clip('evenodd');
+    paperGrain(x, bw, bh, rnd);
+    x.restore();
+  }
+
+  S._tex = {key:key, c:c};
+  return c;
+}
+
+function paperTextW(S, s){
+  var mc = (paperTextW._c || (paperTextW._c = document.createElement('canvas').getContext('2d')));
+  var fs = s*0.74;
+  mc.font = PAPER_FONT.replace('%s', fs);
+  if (SUPPORTS_TRACKING) mc.letterSpacing = (fs*0.09) + 'px';
+  var w = mc.measureText(S.ch || '?').width;
+  if (SUPPORTS_TRACKING) mc.letterSpacing = '0px';
+  return Math.max(s*0.35, w + s*0.24);
+}
+
+/* Габарити наклейки в пікселях кадру W×H. S.size — частка вужчої сторони. */
+function stickerBox(c, S, W, H){
+  var s = S.size * refSize(W, H);
+  if (S.kind === 'img'){
+    var im = S.img;
+    var nw = (im && im.naturalWidth) || 1, nh = (im && im.naturalHeight) || 1;
+    return nw >= nh ? {w:s, h:s*nh/nw, s:s} : {w:s*nw/nh, h:s, s:s};
+  }
+  if (S.kind === 'paper'){
+    var k = 1 + (S.pad || 0), st = S.stretch || 1;
+    if (S.shape === 'text') return {w:(paperTextW(S, s) + s*(k-1))*st, h:s*k, s:s};
+    return {w:s*paperById(S.shape).ar*k*st, h:s*k, s:s};
+  }
+  var sh = shapeById(S.shape);
+  return {w:s*sh.ar, h:s, s:s};
+}
+
+function drawSticker(c, S, W, H){
+  var b = stickerBox(c, S, W, H);
+  var cx = S.x * W, cy = S.y * H;
+  var rot = (S.rot || 0) * Math.PI/180;
+  var co = Math.cos(rot), si = Math.sin(rot);
+  var hw = b.w/2, hh = b.h/2;
+  var pts = [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]];
+  var xs = [], ys = [];
+  for (var i = 0; i < 4; i++){
+    xs.push(cx + pts[i][0]*co - pts[i][1]*si);
+    ys.push(cy + pts[i][0]*si + pts[i][1]*co);
+  }
+  var x0 = Math.min.apply(null,xs), x1 = Math.max.apply(null,xs);
+  var y0 = Math.min.apply(null,ys), y1 = Math.max.apply(null,ys);
+  S._box = {x:x0, y:y0, w:x1-x0, h:y1-y0};          // для влучання пальцем
+  S._c   = {x:cx, y:cy, w:b.w, h:b.h, rot:rot};     // для рамки й ручок
+
+  c.save();
+  c.globalAlpha = S.opacity != null ? S.opacity : 1;
+  c.translate(cx, cy);
+  c.rotate(rot);
+  if (S.flip) c.scale(-1, 1);
+  if (S.shadow > 0){
+    // тінь не залежить від трансформації — рахуємо одразу в пікселях кадру
+    var stuck = S.attach === 'stuck';              // причеплена — лежить впритул
+    c.shadowColor = 'rgba(0,0,0,' + (S.shadow * (stuck ? 0.6 : 0.85)) + ')';
+    c.shadowBlur = b.s * (stuck ? 0.10 : 0.42) * S.shadow;
+    c.shadowOffsetY = b.s * (stuck ? 0.014 : 0.11) * S.shadow;
+    c.shadowOffsetX = b.s * (stuck ? 0.008 : 0.045) * S.shadow;
+  }
+  if (S.kind === 'img'){
+    if (S.img && S.img.complete && S.img.naturalWidth)
+      c.drawImage(S.img, -b.w/2, -b.h/2, b.w, b.h);
+  } else if (S.kind === 'paper'){
+    c.drawImage(paperTexture(S, b.w, b.h), -b.w/2, -b.h/2, b.w, b.h);
+  } else {
+    c.scale(b.s, b.s);
+    c.fillStyle = S.color; c.strokeStyle = S.color;
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    shapeById(S.shape).d(c);
+  }
+  c.restore();
+}
+
+function drawStickers(c, W, H, behind){
+  for (var i = 0; i < state.stickers.length; i++){
+    var S = state.stickers[i];
+    if (!!S.behind === !!behind) drawSticker(c, S, W, H);
+  }
+}
+
+function selSticker(){
+  for (var i = 0; i < state.stickers.length; i++)
+    if (state.stickers[i].id === state.selSticker) return state.stickers[i];
+  return null;
+}
+
+/* Точка в системі координат наклейки (з урахуванням її повороту). */
+function localPt(S, px, py){
+  var g = S._c, co = Math.cos(-g.rot), si = Math.sin(-g.rot);
+  var dx = px - g.x, dy = py - g.y;
+  return {x: dx*co - dy*si, y: dx*si + dy*co};
+}
+
+/* Ручки: кут — пропорційний масштаб, бік і низ — своя форма, верх — поворот. */
+function stickerHandles(S){
+  var g = S && S._c;
+  if (!g) return null;
+  var p = cv.width * 0.014;
+  var hw = g.w/2 + p, hh = g.h/2 + p;
+  var co = Math.cos(g.rot), si = Math.sin(g.rot);
+  function P(x,y){ return {x: g.x + x*co - y*si, y: g.y + x*si + y*co}; }
+  return {scale:P(hw,hh), rot:P(hw,-hh), wide:P(hw,0), tall:P(0,hh),
+          c:{x:g.x, y:g.y}, rotA:g.rot};
+}
+
+function drawStickerSel(c, S, W){
+  var sides = S.kind === 'paper';
+  var g = S._c;
+  if (!g) return;
+  var p = W * 0.014;
+  var hw = g.w/2 + p, hh = g.h/2 + p;
+  var lw = Math.max(1.5, W*0.003), r = Math.max(4, W*0.014);
+  c.save();
+  c.translate(g.x, g.y);
+  c.rotate(g.rot);
+  c.strokeStyle = 'rgba(232,176,75,.95)';
+  c.lineWidth = lw;
+  c.setLineDash([W*0.016, W*0.012]);
+  c.strokeRect(-hw, -hh, hw*2, hh*2);
+  c.setLineDash([]);
+  (sides ? [[hw,hh],[hw,-hh],[hw,0],[0,hh]] : [[hw,hh],[hw,-hh]]).forEach(function(pt){
+    c.beginPath(); c.arc(pt[0], pt[1], r, 0, Math.PI*2);
+    c.fillStyle = 'rgba(232,176,75,.95)'; c.fill();
+    c.lineWidth = lw*0.8; c.strokeStyle = '#1a1408'; c.stroke();
+  });
+  c.restore();
+}
+
 function drawScrim(c, W, H){
   var s = state.scrim;
   if (s.type === 'none' || s.strength <= 0) return;
@@ -723,7 +2234,14 @@ function paint(c, W, H, showSel){
 
   drawScrim(c, W, H);
 
+  drawStickers(c, W, H, true);    // наклейки за текстом
   for (var i = 0; i < state.layers.length; i++) drawLayer(c, state.layers[i], W, H);
+  drawStickers(c, W, H, false);   // наклейки над текстом
+
+  if (showSel && state.selSticker){
+    var K = selSticker();
+    if (K) drawStickerSel(c, K, W);
+  }
 
   if (showSel && state.sel){
     var L = byId(state.sel);
@@ -872,7 +2390,7 @@ function addPreset(idx){
   var t = texts[idx];
   if (!t) return;
   state.textIdx = idx;
-  setText((state.emoji && t.emoji ? t.emoji + ' ' : '') + t.title, t.body);
+  setText(t.title, t.body);   // емодзі в тексті не ставимо — для них є наклейки
   syncLayers(); syncEditor(); syncTexts(); render();
 }
 
@@ -1301,7 +2819,7 @@ function syncTexts(){
   var box = $('tlist'); box.innerHTML = '';
   texts.forEach(function(t, i){
     var b = el('button','tcard' + (i === state.textIdx ? ' on' : ''));
-    b.appendChild(el('b', null, (t.emoji ? t.emoji + ' ' : '') + t.title.replace(/\n/g,' ')));
+    b.appendChild(el('b', null, t.title.replace(/\n/g,' ')));
     if (t.body) b.appendChild(el('span', null, t.body.replace(/\n/g,' ')));
     b.onclick = function(){ addPreset(i); };
     box.appendChild(b);
@@ -1386,7 +2904,403 @@ function withSel(fn){
   };
 }
 
+/* ═══════════ наклейки: інтерфейс ═══════════ */
+
+var paperColor = PAPER_COLORS[0];
+var padOn = false;                 // «+ підкладка» — ставити її новим наліпкам
+var padColorNew = '#fffdf7';
+var padPatternNew = 'none';        // візерунок підкладки для нових наліпок
+var padCrumpleNew = false;         // зіжмакана підкладка
+var padSizeNew = 0.25;             // ширина поля підкладки для нових наліпок
+var layeredNew = true;             // нові наліпки — багатошарові чи пласкі
+var attachNew = 'loose';           // причеплені наліпки лежать впритул (тінь тісніша)
+
+/* Щоб напис не загубився на підкладці свого ж кольору. */
+function contrastPaper(textColor, padColor){
+  if (Math.abs(lumHex(textColor) - lumHex(padColor)) > 0.28) return padColor;
+  return lumHex(textColor) > 0.55 ? '#5c4a3a' : '#fffdf7';
+}
+
+function stickerName(S){
+  if (S.kind === 'img')   return '🖼 своя картинка';
+  if (S.kind === 'paper') return S.shape === 'text' ? '📄 «' + S.ch + '»' : '📄 ' + paperById(S.shape).n;
+  return '◇ ' + shapeById(S.shape).n;
+}
+
+function addSticker(o){
+  var n = state.stickers.length;
+  var S = {
+    id: 'K' + (++uid),
+    kind: o.kind,
+    ch: o.ch || '',
+    shape: o.shape || '',
+    img: o.img || null,
+    x: clamp(0.5 + (n % 4) * 0.05 - 0.075, 0.1, 0.9),
+    y: clamp(0.40 + (n % 3) * 0.06, 0.1, 0.9),
+    size: o.size || (o.kind === 'paper' ? 0.20 : 0.18),
+    rot: o.rot != null ? o.rot : (o.shape === 'pin' ? 16
+         : (o.kind === 'paper' ? (n % 2 ? 9 : -8) : 0)),
+    opacity: 1,
+    color: o.color || paperColor,
+    shadow: o.kind === 'paper' ? 0.32 : 0.25,
+    flip: false,
+    behind: false,
+    edge: o.edge || 'cut',
+    pattern: o.pattern || 'none',
+    fill: o.fill || 'flat',
+    crumple: !!o.crumple,
+    layered: o.layered != null ? o.layered : layeredNew,
+    attach: o.attach || (o.shape && paperById(o.shape).attach) || attachNew,
+    stretch: o.stretch || 1,
+    pad: o.pad != null ? o.pad : (padOn && o.kind === 'paper' ? padSizeNew : 0),
+    padShape: o.padShape || 'same',
+    padColor: o.padColor || (o.shape === 'text'
+      ? contrastPaper(o.color || paperColor, padColorNew) : padColorNew),
+    padPattern: o.padPattern || padPatternNew,
+    padCrumple: o.padCrumple != null ? o.padCrumple : padCrumpleNew,
+    seed: Math.floor(Math.random() * 1e6) + 1,
+  };
+  state.stickers.push(S);
+  state.selSticker = S.id;
+  syncStickers();
+  render();
+  return S;
+}
+
+function delSticker(S){
+  state.stickers = state.stickers.filter(function(o){ return o.id !== S.id; });
+  if (state.selSticker === S.id) state.selSticker = null;
+  syncStickers();
+  render();
+}
+
+/* Мініатюра для кнопки в палітрі — той самий рендер, що й на фото. */
+function paperThumb(shape, ch){
+  var box = 34;
+  var S = {kind:'paper', shape:shape, ch:ch||'', color:paperColor, layered:layeredNew, seed:11};
+  var ar = shape === 'text' ? 1.1 : paperById(shape).ar;
+  var w = ar >= 1 ? box : box*ar, h = ar >= 1 ? box/ar : box;
+  var c = document.createElement('canvas');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = Math.round(w*dpr); c.height = Math.round(h*dpr);
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  var x = c.getContext('2d');
+  if (lumHex(paperColor) < 0.35){                  // темний папір — світла підкладка
+    x.fillStyle = 'rgba(255,255,255,.16)';
+    x.fillRect(0, 0, c.width, c.height);
+  }
+  x.drawImage(paperTexture(S, c.width, c.height), 0, 0, c.width, c.height);
+  return c;
+}
+
+function shapeThumb(sh){
+  var box = 26, w = sh.ar >= 1 ? box : box*sh.ar, h = sh.ar >= 1 ? box/sh.ar : box;
+  var c = document.createElement('canvas');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  c.width = Math.round(w*dpr); c.height = Math.round(h*dpr);
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  var x = c.getContext('2d');
+  if (lumHex(paperColor) < 0.35){
+    x.fillStyle = 'rgba(255,255,255,.16)';
+    x.fillRect(0, 0, c.width, c.height);
+  }
+  x.translate(c.width/2, c.height/2);
+  x.scale(c.height, c.height);
+  x.fillStyle = paperColor; x.strokeStyle = paperColor;
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  sh.d(x);
+  return c;
+}
+
+function buildStickerPalette(){
+  var pap = $('stkPaper'); pap.innerHTML = '';
+  PAPERS.forEach(function(P){
+    var b = el('button', P.ar > 1.6 ? 'wide' : null);
+    b.title = P.n;
+    b.appendChild(paperThumb(P.id));
+    b.onclick = function(){ addSticker({kind:'paper', shape:P.id, color:paperColor}); };
+    pap.appendChild(b);
+  });
+
+  var torn = $('stkTorn'); torn.innerHTML = '';
+  [{shape:'note',   pattern:'grid',  n:'клітинка'},
+   {shape:'note',   pattern:'lines', n:'лінійка'},
+   {shape:'note',   pattern:'none',  n:'чистий'},
+   {shape:'square', pattern:'grid',  n:'квадрат'},
+   {shape:'blob',   pattern:'none',  n:'клапоть'},
+   {shape:'strip',  pattern:'lines', n:'смужка'},
+   {shape:'blob',   pattern:'none',  n:'зіжмаканий клапоть', crumple:true}].forEach(function(t){
+    var b = el('button', 'sm', t.n);
+    b.onclick = function(){
+      addSticker({kind:'paper', shape:t.shape, pattern:t.pattern, edge:'torn',
+                  crumple:!!t.crumple, pad:0,
+                  color:t.pattern === 'none' ? paperColor : '#fffdf7',
+                  size:t.shape === 'strip' ? 0.10 : 0.26});
+    };
+    torn.appendChild(b);
+  });
+
+  var words = $('stkWords'); words.innerHTML = '';
+  PAPER_WORDS.forEach(function(w){
+    var b = el('button', 'sm', w);
+    b.onclick = function(){ addSticker({kind:'paper', shape:'text', ch:w, color:paperColor}); };
+    words.appendChild(b);
+  });
+
+  var cols = $('stkColors'); cols.innerHTML = '';
+  PAPER_COLORS.forEach(function(col){
+    var b = el('button', 'sm' + (col === paperColor ? ' on' : ''));
+    b.style.cssText = 'width:24px;height:24px;padding:0;background:' + col + ';border-color:#4a4a56';
+    b.onclick = function(){
+      paperColor = col;
+      var K = selSticker();
+      if (K && (K.kind === 'paper' || K.kind === 'shape')){ K.color = col; $('skcolor').value = col; }
+      buildStickerPalette(); render();
+    };
+    cols.appendChild(b);
+  });
+
+  var shp = $('stkShapes'); shp.innerHTML = '';
+  SHAPES.forEach(function(sh){
+    var b = el('button', sh.ar > 1.6 ? 'wide' : null);
+    b.title = sh.n;
+    b.appendChild(shapeThumb(sh));
+    b.onclick = function(){ addSticker({kind:'shape', shape:sh.id, color:paperColor}); };
+    shp.appendChild(b);
+  });
+}
+
+function syncStickers(){
+  var box = $('stkList'); box.innerHTML = '';
+  for (var i = state.stickers.length - 1; i >= 0; i--){
+    (function(S){
+      var d = el('div', 'lay' + (S.id === state.selSticker ? ' on' : ''));
+      d.appendChild(el('span', 'nm', stickerName(S)));
+      var x = el('button', 'x', '×');
+      x.onclick = function(ev){ ev.stopPropagation(); delSticker(S); };
+      d.appendChild(x);
+      d.onclick = function(){ state.selSticker = S.id; syncStickers(); render(); };
+      box.appendChild(d);
+    })(state.stickers[i]);
+  }
+  $('noStk').style.display = state.stickers.length ? 'none' : 'block';
+  syncStickerEditor();
+}
+
+function syncStickerEditor(){
+  var S = selSticker();
+  $('stkEditor').style.display = S ? 'block' : 'none';
+  if (!S) return;
+  $('sksize').value = S.size;   $('sksizev').textContent = Math.round(S.size*100) + '%';
+  $('skrot').value  = Math.round(S.rot); $('skrotv').textContent = Math.round(S.rot) + '°';
+  $('skopa').value  = S.opacity; $('skopav').textContent = pct(S.opacity);
+  $('skshadow').value = S.shadow; $('skshadowv').textContent = pct(S.shadow);
+  var anyPaper = S.kind === 'paper';
+  $('skfillrow').style.display = anyPaper ? 'flex' : 'none';
+  $('skpadrow').style.display  = anyPaper ? 'flex' : 'none';
+  if (!anyPaper){ $('skpadsizerow').style.display = 'none'; $('skpadpatrow').style.display = 'none'; }
+  if (anyPaper){
+    $('skpadsizerow').style.display = 'none';
+    $('skpadpatrow').style.display = 'none';
+    Array.prototype.forEach.call($('skfill').children, function(b){
+      b.className = 'sm' + (b.dataset.f === (S.fill || 'flat') ? ' on' : '');
+    });
+    $('sklayer').className = 'sm' + (S.layered !== false ? ' on' : '');
+    $('skpad').value = S.pad || padSizeNew;
+    if (S.pad){
+      $('stkPadSize').value = S.pad;
+      $('stkPadSizev').textContent = Math.round(S.pad*100) + '%';
+    }
+    $('skpadc').value = S.padColor || '#fffdf7';
+    $('skpadsizerow').style.display = S.pad > 0 ? 'flex' : 'none';
+    $('skpadpatrow').style.display  = S.pad > 0 ? 'flex' : 'none';
+    Array.prototype.forEach.call($('skpadpat').children, function(b){
+      b.className = 'sm' + (b.dataset.pp === (S.padPattern || 'none') ? ' on' : '');
+    });
+    $('skpadcrump').className = 'sm' + (S.padCrumple ? ' on' : '');
+    Array.prototype.forEach.call($('skpadshape').children, function(b){
+      var cur = !S.pad ? 'off' : (S.padShape || 'same');
+      b.className = 'sm' + (b.dataset.s === cur ? ' on' : '');
+    });
+  }
+  var isPaper = S.kind === 'paper' && S.shape !== 'text';
+  $('skedgerow').style.display = isPaper ? 'flex' : 'none';
+  $('skpatrow').style.display  = isPaper ? 'flex' : 'none';
+  if (isPaper){
+    Array.prototype.forEach.call($('skedge').children, function(b){
+      b.className = 'sm' + (b.dataset.e === (S.edge || 'cut') ? ' on' : '');
+    });
+    Array.prototype.forEach.call($('skpat').children, function(b){
+      b.className = 'sm' + (b.dataset.p === (S.pattern || 'none') ? ' on' : '');
+    });
+    $('skcrumple').className = 'sm' + (S.crumple ? ' on' : '');
+  }
+  $('skwidrow').style.display = anyPaper ? 'flex' : 'none';
+  if (anyPaper){
+    $('skwid').value = S.stretch || 1;
+    $('skwidv').textContent = Math.round((S.stretch || 1) * 100) + '%';
+  }
+  var colorable = S.kind === 'paper' || S.kind === 'shape';
+  $('skcolorrow').style.display = colorable ? 'flex' : 'none';
+  if (colorable) $('skcolor').value = S.color;
+  $('skfront').textContent = S.behind ? 'за текстом' : 'над текстом';
+  $('skfront').className = 'sm' + (S.behind ? '' : ' on');
+  $('skflip').className = 'sm' + (S.flip ? ' on' : '');
+}
+
+function withStk(fn){
+  return function(){
+    var S = selSticker();
+    if (!S) return;
+    fn(S);
+    render();
+  };
+}
+
 /* ═══════════ прив'язка подій ═══════════ */
+
+$('sksize').oninput = withStk(function(S){ S.size = +$('sksize').value; $('sksizev').textContent = Math.round(S.size*100)+'%'; });
+$('skrot').oninput  = withStk(function(S){ S.rot = +$('skrot').value; $('skrotv').textContent = Math.round(S.rot)+'°'; });
+$('skopa').oninput  = withStk(function(S){ S.opacity = +$('skopa').value; $('skopav').textContent = pct(S.opacity); });
+$('skshadow').oninput = withStk(function(S){ S.shadow = +$('skshadow').value; $('skshadowv').textContent = pct(S.shadow); });
+$('skcolor').oninput  = withStk(function(S){ S.color = $('skcolor').value; });
+Array.prototype.forEach.call($('skfill').children, function(b){
+  b.onclick = withStk(function(S){ S.fill = b.dataset.f; syncStickerEditor(); });
+});
+Array.prototype.forEach.call($('skpadshape').children, function(b){
+  b.onclick = withStk(function(S){
+    if (b.dataset.s === 'off'){ S.pad = 0; }
+    else { S.padShape = b.dataset.s; if (!S.pad) S.pad = padSizeNew; }
+    syncStickerEditor();
+  });
+});
+$('sklayer').onclick = withStk(function(S){
+  S.layered = S.layered === false;
+  layeredNew = S.layered;
+  $('stkLayered').className = 'sm' + (layeredNew ? ' on' : '');
+  $('stkPlain').className   = 'sm' + (layeredNew ? '' : ' on');
+  buildStickerPalette();
+  syncStickerEditor();
+});
+$('skwid').oninput = withStk(function(S){
+  S.stretch = +$('skwid').value;
+  $('skwidv').textContent = Math.round(S.stretch*100) + '%';
+});
+$('skcrumple').onclick = withStk(function(S){
+  S.crumple = !S.crumple;
+  if (S.crumple && S.edge !== 'torn') S.edge = 'torn';
+  syncStickerEditor();
+});
+Array.prototype.forEach.call($('skpadpat').children, function(b){
+  b.onclick = withStk(function(S){ S.padPattern = b.dataset.pp; syncStickerEditor(); });
+});
+$('skpadcrump').onclick = withStk(function(S){ S.padCrumple = !S.padCrumple; syncStickerEditor(); });
+$('skpad').oninput  = withStk(function(S){
+  S.pad = +$('skpad').value;
+  padSizeNew = S.pad;
+  $('stkPadSize').value = S.pad;
+  $('stkPadSizev').textContent = Math.round(S.pad*100) + '%';
+});
+$('stkPadSize').oninput = function(){
+  padSizeNew = +$('stkPadSize').value;
+  $('stkPadSizev').textContent = Math.round(padSizeNew*100) + '%';
+  var K = selSticker();
+  if (K && K.kind === 'paper' && K.pad){
+    K.pad = padSizeNew;
+    $('skpad').value = padSizeNew;
+    render();
+  }
+};
+$('skpadc').oninput = withStk(function(S){ S.padColor = $('skpadc').value; if (!S.pad){ S.pad = 0.18; $('skpad').value = 0.18; } });
+Array.prototype.forEach.call($('skedge').children, function(b){
+  b.onclick = withStk(function(S){ S.edge = b.dataset.e; syncStickerEditor(); });
+});
+Array.prototype.forEach.call($('skpat').children, function(b){
+  b.onclick = withStk(function(S){ S.pattern = b.dataset.p; syncStickerEditor(); });
+});
+$('skflip').onclick   = withStk(function(S){ S.flip = !S.flip; syncStickerEditor(); });
+$('skfront').onclick  = withStk(function(S){ S.behind = !S.behind; syncStickerEditor(); });
+$('skdel').onclick    = withStk(function(S){ delSticker(S); });
+$('skdup').onclick    = withStk(function(S){
+  var c = {}; for (var k in S) if (k.charAt(0) !== '_') c[k] = S[k];
+  c.id = 'K' + (++uid);
+  c.x = clamp(S.x + 0.05, 0, 1); c.y = clamp(S.y + 0.05, 0, 1);
+  c.seed = Math.floor(Math.random()*1e6) + 1;
+  state.stickers.push(c); state.selSticker = c.id;
+  syncStickers();
+});
+function moveSticker(dir){
+  return withStk(function(S){
+    var i = state.stickers.indexOf(S), j = i + dir;
+    if (j < 0 || j >= state.stickers.length) return;
+    state.stickers.splice(i,1); state.stickers.splice(j,0,S);
+    syncStickers();
+  });
+}
+$('skup').onclick = moveSticker(1);    // вище в списку = ближче до глядача
+$('skdn').onclick = moveSticker(-1);
+
+$('stkPadOn').onclick = function(){
+  padOn = !padOn;
+  $('stkPadOn').className = 'sm' + (padOn ? ' on' : '');
+  var K = selSticker();                     // одразу застосовуємо до обраної
+  if (K && K.kind === 'paper'){
+    K.pad = padOn ? (K.pad || padSizeNew) : 0;
+    K.padShape = 'same';
+    K.padColor = K.shape === 'text' ? contrastPaper(K.color, padColorNew) : padColorNew;
+    K.padPattern = padPatternNew;
+    K.padCrumple = padCrumpleNew;
+    syncStickerEditor(); render();
+  }
+};
+function setLayeredMode(on){
+  layeredNew = on;
+  $('stkLayered').className = 'sm' + (on ? ' on' : '');
+  $('stkPlain').className   = 'sm' + (on ? '' : ' on');
+  buildStickerPalette();                          // мініатюри теж перемальовуємо
+  var K = selSticker();
+  if (K && K.kind === 'paper'){ K.layered = on; syncStickerEditor(); render(); }
+}
+$('stkLayered').onclick = function(){ setLayeredMode(true); };
+$('stkPlain').onclick   = function(){ setLayeredMode(false); };
+
+$('stkPadCrump').onclick = function(){
+  padCrumpleNew = !padCrumpleNew;
+  $('stkPadCrump').className = 'sm' + (padCrumpleNew ? ' on' : '');
+  var K = selSticker();
+  if (K && K.kind === 'paper' && K.pad){ K.padCrumple = padCrumpleNew; syncStickerEditor(); render(); }
+};
+$('stkPadPat').onchange = function(){
+  padPatternNew = $('stkPadPat').value;
+  var K = selSticker();
+  if (K && K.kind === 'paper' && K.pad){ K.padPattern = padPatternNew; syncStickerEditor(); render(); }
+};
+$('stkPadColor').oninput = function(){
+  padColorNew = $('stkPadColor').value;
+  var K = selSticker();
+  if (K && K.kind === 'paper' && K.pad){ K.padColor = padColorNew; $('skpadc').value = padColorNew; render(); }
+};
+
+$('stkWordAdd').onclick = function(){
+  var v = $('stkWord').value.trim();
+  if (!v) { $('stkWord').focus(); return; }
+  addSticker({kind:'paper', shape:'text', ch:v, color:paperColor});
+  $('stkWord').value = '';
+};
+$('stkWord').onkeydown = function(e){ if (e.key === 'Enter') $('stkWordAdd').onclick(); };
+
+$('stkUp').onchange = function(e){
+  Array.prototype.slice.call(e.target.files || []).forEach(function(f){
+    var fr = new FileReader();
+    fr.onload = function(){
+      var im = new Image();
+      im.onload = function(){ addSticker({kind:'img', img:im, size:0.26}); };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(f);
+  });
+  e.target.value = '';
+};
 
 FONTS.forEach(function(f){
   var o = el('option', null, f.n); o.value = f.v; $('lfont').appendChild(o);
@@ -1476,13 +3390,6 @@ $('addown').onclick = function(){
   syncLayers(); syncEditor(); syncTexts(); render();
   goTab('style');
   $('ltext').focus();
-};
-
-$('emo').onclick = function(){
-  state.emoji = !state.emoji;
-  $('emo').className = 'sm' + (state.emoji ? ' on' : '');
-  $('emo').textContent = state.emoji ? '😊 з емодзі' : '😶 без емодзі';
-  if (state.textIdx >= 0) addPreset(state.textIdx);
 };
 
 $('autogo').onclick = function(){
@@ -1578,10 +3485,21 @@ function dist(){
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+function angle(){
+  var k = Object.keys(pts);
+  if (k.length < 2) return 0;
+  var a = pts[k[0]], b = pts[k[1]];
+  return Math.atan2(b.y - a.y, b.x - a.x);
+}
+
 cv.addEventListener('pointerdown', function(e){
   pts[e.pointerId] = {x:e.clientX, y:e.clientY};
   if (Object.keys(pts).length === 2){
-    pinch = {d0: dist(), s0: state.img.scale};
+    // якщо обрано наклейку — щипок міняє її розмір і поворот, а не кадр
+    var K2 = selSticker();
+    pinch = K2
+      ? {kind:'stk', S:K2, d0:dist(), s0:K2.size, a0:angle(), r0:K2.rot||0}
+      : {kind:'img', d0:dist(), s0:state.img.scale};
     drag = null;
     return;
   }
@@ -1589,6 +3507,46 @@ cv.addEventListener('pointerdown', function(e){
   var r = cv.getBoundingClientRect();
   var px = (e.clientX - r.left) / r.width  * cv.width;
   var py = (e.clientY - r.top)  / r.height * cv.height;
+
+  /* 1) ручки обраної наклейки */
+  var K = selSticker();
+  var hs = K ? stickerHandles(K) : null;
+  if (hs){
+    var HR = Math.max(12, cv.width * 0.045);
+    if (Math.hypot(px - hs.scale.x, py - hs.scale.y) < HR){
+      drag = {kind:'sres', S:K, d0: Math.max(1, Math.hypot(px-hs.c.x, py-hs.c.y)), s0:K.size};
+      cv.setPointerCapture(e.pointerId); return;
+    }
+    if (Math.hypot(px - hs.rot.x, py - hs.rot.y) < HR){
+      drag = {kind:'srot', S:K, a0: Math.atan2(py-hs.c.y, px-hs.c.x), r0:K.rot||0};
+      cv.setPointerCapture(e.pointerId); return;
+    }
+    if (K.kind === 'paper' && Math.hypot(px - hs.wide.x, py - hs.wide.y) < HR){
+      drag = {kind:'swid', S:K, d0: Math.max(1, Math.abs(localPt(K,px,py).x)), t0:K.stretch||1};
+      cv.setPointerCapture(e.pointerId); return;
+    }
+    if (K.kind === 'paper' && Math.hypot(px - hs.tall.x, py - hs.tall.y) < HR){
+      drag = {kind:'shei', S:K, d0: Math.max(1, Math.abs(localPt(K,px,py).y)),
+              s0:K.size, t0:K.stretch||1};
+      cv.setPointerCapture(e.pointerId); return;
+    }
+  }
+
+  /* 2) наклейки — згори вниз */
+  for (var s = state.stickers.length - 1; s >= 0; s--){
+    var sb = state.stickers[s]._box;
+    if (!sb) continue;
+    var sp = cv.width * 0.01;
+    if (px >= sb.x-sp && px <= sb.x+sb.w+sp && py >= sb.y-sp && py <= sb.y+sb.h+sp){
+      var S = state.stickers[s];
+      state.selSticker = S.id;
+      drag = {kind:'stk', S:S, sx:px, sy:py, x0:S.x, y0:S.y};
+      cv.setPointerCapture(e.pointerId);
+      cv.classList.add('grabbing');
+      syncStickers(); render();
+      return;
+    }
+  }
 
   var hit = null;
   for (var i = state.layers.length - 1; i >= 0; i--){
@@ -1601,9 +3559,12 @@ cv.addEventListener('pointerdown', function(e){
   }
   if (hit){
     state.sel = hit.id;
+    state.selSticker = null;
     drag = {kind:'layer', L:hit, sx:px, sy:py, x0:hit.x, y0:hit.y};
-    syncLayers(); syncEditor();
+    syncLayers(); syncEditor(); syncStickers();
   } else {
+    // клік по фону знімає виділення наклейки — щоб щипок знову масштабував кадр
+    if (state.selSticker){ state.selSticker = null; syncStickers(); }
     drag = {kind:'img', sx:px, sy:py, x0:state.img.ox, y0:state.img.oy};
   }
   cv.setPointerCapture(e.pointerId);
@@ -1617,9 +3578,16 @@ cv.addEventListener('pointermove', function(e){
   if (pinch && Object.keys(pts).length >= 2){
     var d = dist();
     if (d > 0 && pinch.d0 > 0){
-      state.img.scale = clamp(pinch.s0 * d / pinch.d0, 0.3, 3);
-      $('zoom').value = state.img.scale;
-      $('zoomv').textContent = pct(state.img.scale);
+      if (pinch.kind === 'stk'){
+        pinch.S.size = clamp(pinch.s0 * d / pinch.d0, 0.02, 2);
+        var da = (angle() - pinch.a0) * 180/Math.PI;
+        pinch.S.rot = pinch.r0 + da;
+        syncStickerEditor();
+      } else {
+        state.img.scale = clamp(pinch.s0 * d / pinch.d0, 0.3, 3);
+        $('zoom').value = state.img.scale;
+        $('zoomv').textContent = pct(state.img.scale);
+      }
       render();
     }
     return;
@@ -1629,9 +3597,35 @@ cv.addEventListener('pointermove', function(e){
   var r = cv.getBoundingClientRect();
   var px = (e.clientX - r.left) / r.width  * cv.width;
   var py = (e.clientY - r.top)  / r.height * cv.height;
+  if (drag.kind === 'sres'){
+    var hc = drag.S._c;
+    var dd = Math.hypot(px - hc.x, py - hc.y);
+    drag.S.size = clamp(drag.s0 * dd / drag.d0, 0.02, 2);
+    syncStickerEditor(); render(); return;
+  }
+  if (drag.kind === 'swid'){
+    drag.S.stretch = clamp(drag.t0 * Math.abs(localPt(drag.S, px, py).x) / drag.d0, 0.15, 8);
+    syncStickerEditor(); render(); return;
+  }
+  if (drag.kind === 'shei'){
+    var ns = clamp(drag.s0 * Math.abs(localPt(drag.S, px, py).y) / drag.d0, 0.02, 2);
+    drag.S.stretch = clamp(drag.t0 * drag.s0 / ns, 0.15, 8);   // ширина лишається
+    drag.S.size = ns;
+    syncStickerEditor(); render(); return;
+  }
+  if (drag.kind === 'srot'){
+    var rc = drag.S._c;
+    var a = Math.atan2(py - rc.y, px - rc.x);
+    drag.S.rot = drag.r0 + (a - drag.a0) * 180/Math.PI;
+    if (e.shiftKey) drag.S.rot = Math.round(drag.S.rot / 15) * 15;
+    syncStickerEditor(); render(); return;
+  }
   var dx = (px - drag.sx) / cv.width;
   var dy = (py - drag.sy) / cv.height;
-  if (drag.kind === 'layer'){
+  if (drag.kind === 'stk'){
+    drag.S.x = clamp(drag.x0 + dx, -0.3, 1.3);
+    drag.S.y = clamp(drag.y0 + dy, -0.3, 1.3);
+  } else if (drag.kind === 'layer'){
     drag.L.x = clamp(drag.x0 + dx, -0.2, 1.2);
     drag.L.y = clamp(drag.y0 + dy, -0.2, 1.2);
   } else {
@@ -1660,6 +3654,24 @@ cv.addEventListener('wheel', function(e){
 
 document.addEventListener('keydown', function(e){
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+
+  var K = selSticker();
+  if (K){
+    var st = e.shiftKey ? 0.02 : 0.004;
+    if (e.key === 'ArrowLeft')       K.x -= st;
+    else if (e.key === 'ArrowRight') K.x += st;
+    else if (e.key === 'ArrowUp')    K.y -= st;
+    else if (e.key === 'ArrowDown')  K.y += st;
+    else if (e.key === '+' || e.key === '=') K.size = clamp(K.size*1.06, 0.02, 2);
+    else if (e.key === '-' || e.key === '_') K.size = clamp(K.size/1.06, 0.02, 2);
+    else if (e.key === 'Backspace' || e.key === 'Delete') delSticker(K);
+    else if (e.key === 'Escape'){ state.selSticker = null; syncStickers(); }
+    else return;
+    e.preventDefault();
+    syncStickerEditor(); render();
+    return;
+  }
+
   var L = state.sel ? byId(state.sel) : null;
   if (!L) return;
   var step = e.shiftKey ? 0.02 : 0.004;
@@ -1746,9 +3758,11 @@ buildGallery();
 buildRatios();
 buildScrims();
 buildStyles();
+buildStickerPalette();
 syncTexts();
 syncLayers();
 syncEditor();
+syncStickers();
 $('scrimvv').textContent = pct(state.scrim.strength);
 if (photos.length) selectPhoto(photos[0].id);
 if (texts.length) addPreset(0);
